@@ -317,7 +317,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 1.7（ステルス・警備兵・開発者メニュー）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 1.8（監視カメラ調整）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -1112,6 +1112,7 @@ function nearestInteract(){
  if(P.locker)return {type:'unhide',label:'ロッカーから出る'};
  if(P.downed||P.reading)return null;
  {const cq=nearGuardCQC();if(cq)return {type:'cqc',g:cq.g,label:'背後から気絶させる'};}
+ for(const c of G.cams||[]){if(c.dead)continue;const cy=c.y+0.5+(c.dir>0?0.45:-0.45);if(Math.hypot(c.x+0.5-P.x,cy-P.y)<1.3)return {type:'camkill',c,label:'カメラを壊す'};}
  if(Net.on&&P2&&P2.here&&(Net.host?P2.down:P2.downed)&&Math.hypot(P2.x-P.x,P2.y-P.y)<1.5)return {type:'revive',label:'相棒を助け起こす'};
  let best=null,bd=9;const cand=(o,d,pr)=>{const s=d-pr*0.3;if(d<1.25&&s<bd){bd=s;best=o;}};
  for(const d of docs)if(!d.got)cand({type:'doc',d,label:'資料を調べる'},Math.hypot(d.x+0.5-P.x,d.y+0.5-P.y),3);
@@ -1135,6 +1136,7 @@ function doAction(){
   case 'doc':vib(25,'doc');openDoc(it.d,true);break;
   case 'pick':pickUp(it.it);break;
   case 'cqc':cqc(it.g);break;
+  case 'camkill':killCam(it.c);break;
   case 'vent':{if(E&&E.state==='chase')badge('vent');P.vent={ph:'in',t:0,a:it.a,b:it.b,dur:Math.max(0.9,Math.hypot(it.a[0]-it.b[0],it.a[1]-it.b[1])*0.08)};P.x=it.a[0]+0.5;P.y=it.a[1]+0.5;P.vx=P.vy=0;S.vent();if(E&&(E.state==='chase'))toast('通気口に逃げ込んだ。ECHO-01は追ってこない');break;}
   case 'zip':{const dur=Math.hypot(it.a[0]-it.b[0],it.a[1]-it.b[1])/11+0.3;P.zip={a:it.a,b:it.b,t:0,dur};P.x=it.a[0]+0.5;P.y=it.a[1]+0.5;S.zip(dur);break;}
   case 'shut':{const s=it.s;if(!s.closed){const ex=Math.floor(E.x),ey=Math.floor(E.y);if(Math.hypot(P.x-(s.x+0.5),P.y-(s.y+0.5))<0.55||(ex===s.x&&ey===s.y)){S.deny();toast('シャッターの下に何かがある');return;}}
@@ -1253,7 +1255,7 @@ function drawMini(target,s,big){
  if(G.unlocked&&Math.floor(G.t*3)%2===0){c.strokeStyle='#50d080';c.lineWidth=Math.max(1.5,s*0.4);c.strokeRect(DOCK.x*s-1,DOCK.y*s-1,DOCK.w*s+2,DOCK.h*s+2);}
  if(big){c.fillStyle='rgba(233,230,220,.8)';c.font=`700 ${Math.round(s*0.9)}px "Zen Kaku Gothic New",sans-serif`;c.textAlign='center';for(const r of ROOMS){if(r.id==='main'||r.id==='lower'||r.id==='pass')continue;c.fillText(r.name,(r.x+r.w/2)*s,(r.y+r.h/2)*s);}}
  for(const g of G.guards||[])if(g.seen&&!(g.sleep>0)){c.fillStyle=g.state==='alert'?'#ff3020':'#ffb040';c.strokeStyle=c.fillStyle;c.lineWidth=Math.max(1,s*0.3);c.beginPath();c.arc(g.x*s,g.y*s,Math.max(1.8,s*0.5),0,TAU);c.fill();c.beginPath();c.moveTo(g.x*s,g.y*s);c.lineTo((g.x+Math.cos(g.a)*1.8)*s,(g.y+Math.sin(g.a)*1.8)*s);c.stroke();}
- for(const q of G.cams||[])if(q.seen){c.fillStyle='#ff6040';c.fillRect(q.x*s,q.y*s,s,s);}
+ for(const q of G.cams||[])if(q.seen){c.fillStyle=q.dead?'#555':'#ff6040';c.fillRect(q.x*s,q.y*s,s,s);}
  for(const q of G.crawl||[])if(q.seen){c.fillStyle='#ff9060';c.beginPath();c.arc(q.x*s,q.y*s,Math.max(1.4,s*0.35),0,TAU);c.fill();}
  if(Net.on&&P2&&P2.here){c.fillStyle=(P2.down||P2.downed)?'#ff5040':'#50d080';c.beginPath();c.arc(P2.x*s,P2.y*s,Math.max(2.2,s*0.6),0,TAU);c.fill();}
  if(P){const px=P.x*s,py=P.y*s;c.fillStyle=P.vent?'rgba(255,255,255,.5)':'#fff';c.beginPath();c.arc(px,py,Math.max(2.2,s*0.6),0,TAU);c.fill();c.strokeStyle='#fff';c.lineWidth=Math.max(1,s*0.3);c.beginPath();c.moveTo(px,py);c.lineTo(px+Math.cos(P.face)*s*1.4,py+Math.sin(P.face)*s*1.4);c.stroke();}
@@ -2357,12 +2359,12 @@ function setupHazards(n){
  const d=G.depth||0;G.cams=[];G.crawl=[];G.traps=[];G.decoys=[];G.halo=null;
  if(d>=1)G.halo={x:P.x-0.8,y:P.y,cd:n>=3?0:20,ph:0,warnT:0,dash:null};
  if(Net.on)return;
- if(d>=1){const nc=Math.min(CAMS.length,2+d);for(let i=0;i<nc;i++){const [x,y,dir]=CAMS[i];G.cams.push({x,y,base:dir>0?Math.PI/2:-Math.PI/2,a:0,ph:Math.random()*6,off:0,cool:0});}}
+ if(d>=1){const nc=Math.min(CAMS.length,2+d);for(let i=0;i<nc;i++){const [x,y,dir]=CAMS[i];G.cams.push({x,y,dir,base:(dir>0?Math.PI/2:-Math.PI/2)+(i%2?1:-1)*dir*1.0,a:0,ph:Math.random()*6,off:0,cool:0});}}
  if(d>=2&&n>=2){const nn=d>=3?4:2;for(let i=0;i<nn;i++){const pos=spawnEchoAway(10,30);if(pos)G.crawl.push({x:pos[0],y:pos[1],a:0,stun:0,path:null,pi:0,rp:0,ph:Math.random()*6,chase:false,hitCD:0});}}
 }
 function camSees(c){
- if(c.off>0||!P||P.hidden||P.vent||P.locker||!P.alive||P.camo>0||(P.box&&!P.moving))return false;const cx=c.x+0.5,cy=c.y+0.5+(c.base>0?0.45:-0.45);
- const dx=P.x-cx,dy=P.y-cy,d=Math.hypot(dx,dy);if(d>5.5)return false;if(Math.abs(angDiff(c.base+c.a,Math.atan2(dy,dx)))>0.38)return false;return los(cx,cy,P.x,P.y);
+ if(c.off>0||!P||P.hidden||P.vent||P.locker||!P.alive||P.camo>0||(P.box&&!P.moving))return false;const cx=c.x+0.5,cy=c.y+0.5+(c.dir>0?0.45:-0.45);
+ if(c.dead)return false;const dx=P.x-cx,dy=P.y-cy,d=Math.hypot(dx,dy);if(d>4.6||d<1.25)return false;if(Math.abs(angDiff(c.base+c.a,Math.atan2(dy,dx)))>0.34)return false;return los(cx,cy,P.x,P.y)?d:false;
 }
 function updateExtras(dt){
  if(!P)return;
@@ -2374,8 +2376,13 @@ function updateExtras(dt){
  for(const d of G.decoys||[]){d.t-=dt;d.beep-=dt;if(d.beep<=0){d.beep=0.8;const [v,p]=spat(d.x,d.y,20);S.radio();if(E&&E.state!=='chase'&&!E.dormant){E.last=[d.x,d.y];if(E.state!=='search')setEchoState('search');E.searchT=3;}}}
  G.decoys=(G.decoys||[]).filter(d=>d.t>0);
  // cameras
- for(const c of G.cams||[]){c.ph+=dt;c.a=Math.sin(c.ph*0.7)*0.75;c.off=Math.max(0,c.off-dt);c.cool=Math.max(0,c.cool-dt);
-  if(c.cool<=0&&camSees(c)){c.cool=6;S.deny();S.screech();G.redPulse=1;G.flick=1;vib([100,60,100],'cam',800);toast('監視カメラに見つかった！ ECHO-01が来る');
+ for(const c of G.cams||[]){if(c.dead){if(Math.random()<dt*0.6)sparks(c.x+0.5,c.y+0.5+(c.dir>0?0.45:-0.45),2,2);continue;}
+  c.ph+=dt;c.a=0.42*clamp(Math.sin(c.ph*0.45)*1.5,-1,1);c.off=Math.max(0,c.off-dt);c.cool=Math.max(0,c.cool-dt);c.sus=c.sus||0;
+  const sd=camSees(c);
+  if(sd&&c.cool<=0){const was=c.sus;c.sus=Math.min(1,c.sus+dt*(1.25-sd/5.5)*(P.sprint?1.5:1)*(P.moving?1:0.6));if(was<0.3&&c.sus>=0.3)S.click(1);}
+  else c.sus=Math.max(0,c.sus-dt*0.5);
+  if(c.sus>=1){c.sus=0;c.cool=8;S.deny();S.screech();G.redPulse=1;G.flick=1;vib([100,60,100],'cam',800);toast('監視カメラに見つかった！');
+   G.alertPos=[P.x,P.y];if(G.guards&&G.guards.length){for(const g of G.guards)if(g.sleep<=0&&g.state!=='alert'){g.state='search';g.lastP=[P.x,P.y];g.look=6;}if(G.phase==='normal')setPhase('caution');}
    if(E&&!E.dormant){E.last=[P.x,P.y];setEchoState('search');E.searchT=6;}}}
  // crawlers
  for(const c of G.crawl||[]){c.ph+=dt*6;c.hitCD=Math.max(0,c.hitCD-dt);if(c.stun>0){c.stun-=dt;continue;}
@@ -2396,8 +2403,10 @@ function drawExtras(inView){
  for(const it of G.pickups||[]){if(!inView(it.x,it.y))continue;const X=(it.x+0.5)*T,Y=(it.y+0.5)*T+Math.sin(G.t*2.5+it.t)*2;ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(X-9,Y-4,20,12);ctx.fillStyle='#2a3036';ctx.fillRect(X-10,Y-10,20,18);ctx.strokeStyle='#e0a030';ctx.lineWidth=1.5;ctx.strokeRect(X-10,Y-10,20,18);drawItemIcon(ctx,it.k,X,Y-1,14,it.k==='camo'?'#5ae6ff':'#e0a030');}
  for(const t of G.traps||[]){ctx.fillStyle=t.arm>0?'#6a6f74':'#4ab0d0';ctx.beginPath();ctx.arc(t.x*T,t.y*T,7,0,TAU);ctx.fill();ctx.strokeStyle='rgba(90,230,255,.7)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(t.x*T,t.y*T,10+Math.sin(G.t*6)*2,0,TAU);ctx.stroke();}
  for(const d of G.decoys||[]){ctx.fillStyle='#e0a030';ctx.fillRect(d.x*T-5,d.y*T-5,10,10);ctx.strokeStyle=`rgba(224,160,48,${(d.beep/0.8)})`;ctx.beginPath();ctx.arc(d.x*T,d.y*T,(1-d.beep/0.8)*30+6,0,TAU);ctx.stroke();}
- for(const c of G.cams||[]){if(!inView(c.x,c.y,6))continue;const cx=(c.x+0.5)*T,cy=(c.y+0.5)*T+(c.base>0?T*0.45:-T*0.45);
-  if(c.off<=0){const a=c.base+c.a;const g=ctx.createRadialGradient(cx,cy,2,cx,cy,5.5*T);g.addColorStop(0,'rgba(255,40,24,.28)');g.addColorStop(1,'rgba(255,40,24,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,5.5*T,a-0.38,a+0.38);ctx.closePath();ctx.fill();}
+ for(const c of G.cams||[]){if(!inView(c.x,c.y,6))continue;const cx=(c.x+0.5)*T,cy=(c.y+0.5)*T+(c.dir>0?T*0.45:-T*0.45);
+  if(c.dead){ctx.fillStyle='#2a2e32';ctx.fillRect(cx-8,cy-6,16,12);ctx.strokeStyle='#111';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx-8,cy-6);ctx.lineTo(cx+8,cy+6);ctx.stroke();continue;}
+  if(c.off<=0){const a=c.base+c.a,sus=c.sus||0;const col=sus>0.3?'255,200,40':'255,90,60';const g=ctx.createRadialGradient(cx,cy,1.25*T,cx,cy,4.6*T);g.addColorStop(0,`rgba(${col},${0.22+sus*0.25})`);g.addColorStop(1,`rgba(${col},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,4.6*T,a-0.34,a+0.34);ctx.arc(cx,cy,1.25*T,a+0.34,a-0.34,true);ctx.closePath();ctx.fill();
+   if(sus>0.3){ctx.save();ctx.font='900 18px sans-serif';ctx.textAlign='center';ctx.fillStyle='#ffcf30';ctx.strokeStyle='#000';ctx.lineWidth=3;ctx.strokeText('?',cx,cy-12);ctx.fillText('?',cx,cy-12);ctx.restore();}}
   ctx.fillStyle='#1c2126';ctx.fillRect(cx-8,cy-6,16,12);ctx.fillStyle=c.off>0?'#444':(Math.sin(G.t*8)>0?'#ff3020':'#801008');ctx.beginPath();ctx.arc(cx,cy,3,0,TAU);ctx.fill();}
  for(const c of G.crawl||[]){if(!inView(c.x,c.y))continue;ctx.save();ctx.translate(c.x*T,c.y*T);ctx.rotate(c.a);ctx.strokeStyle='#8a8f96';ctx.lineWidth=2.5;ctx.lineCap='round';
   for(let i=0;i<4;i++){const s=i<2?-1:1,f=i%2?-1:1;const w=Math.sin(c.ph+i*1.6)*4;ctx.beginPath();ctx.moveTo(f*4,s*3);ctx.lineTo(f*10+w,s*10);ctx.lineTo(f*14+w,s*8);ctx.stroke();}
@@ -2495,12 +2504,14 @@ function updateGuards(dt){
  G.bullets=G.bullets.filter(b=>b.t>0);
  for(const dd of G.darts){dd.x+=dd.vx*dt;dd.y+=dd.vy*dt;dd.t-=dt;if(opaque(Math.floor(dd.x),Math.floor(dd.y)))dd.t=0;
   for(const g of G.guards){if(dd.t>0&&g.sleep<=0&&Math.hypot(dd.x-g.x,dd.y-g.y)<0.45){dd.t=0;g.hp--;if(g.hp<=0){g.sleep=g.type==='drone'?60:45;g.hp=GT[g.type].hp;g.sus=0;toast(g.type==='drone'?'ドローンを停止させた':'麻酔が効いた');}else{g.state='search';g.lastP=[P.x,P.y];g.look=4;}}}
+  for(const c of G.cams||[]){if(dd.t>0&&!c.dead&&Math.hypot(dd.x-(c.x+0.5),dd.y-(c.y+0.5+(c.dir>0?0.45:-0.45)))<0.5){dd.t=0;killCam(c);}}
   if(dd.t>0&&E&&!E.dormant&&Math.hypot(dd.x-E.x,dd.y-E.y)<0.9){dd.t=0;toast('ECHO-01には麻酔が効かない！');}}
  G.darts=G.darts.filter(d=>d.t>0);
 }
 function hurtPlayer(n){if(G.dev&&G.dev.god)return;P.hp=(P.hp==null?4:P.hp)-n;P.inv=1.3;G.shake=9;G.flash=0.35;vib([90,40,90],'hurt',300);S.hurtSpark();
  if(P.hp<=0){if(P.bandage>0){P.bandage--;if(G.kits>0)G.kits--;P.hp=2;toast('救急キットで持ち直した');return;}G.capturedBy='guard';caught();}}
 function nearGuardCQC(){if(!G.guards)return null;for(const g of G.guards){if(g.sleep>0||g.state==='alert'||!GT[g.type].cqc)continue;const d=Math.hypot(g.x-P.x,g.y-P.y);if(d<1.15){const behind=Math.abs(angDiff(g.a,Math.atan2(P.y-g.y,P.x-g.x)))>1.9;if(behind||g.state==='sus')return {g,d};}}return null;}
+function killCam(c){c.dead=true;const cy=c.y+0.5+(c.dir>0?0.45:-0.45);sparks(c.x+0.5,cy,16,5);S.crash(0.35,0);vib([40,30,60]);toast('監視カメラを壊した');}
 function cqc(g){g.sleep=60;g.sus=0;g.state='patrol';S.pound(0.6,0);vib([50,30,80]);sparks(g.x,g.y,6,3);toast('背後から気絶させた');}
 function fireDart(){const a=P.face;G.darts.push({x:P.x+Math.cos(a)*0.4,y:P.y+Math.sin(a)*0.4,vx:Math.cos(a)*14,vy:Math.sin(a)*14,t:0.9});S.click(1);vib(20);}
 function useItem2(k){
