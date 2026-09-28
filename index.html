@@ -342,7 +342,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
  <div class="row"><button class="bigbtn" id="resRetry">もう一度潜る</button><button class="ghost" id="resLobby">ロビーへ</button></div>
 </section>
 
-<div id="pause" class="overlay" hidden><div class="card"><h3>PAUSE</h3><div class="col"><button class="bigbtn" id="resumeBtn">再開する</button><button class="muteBtn">サウンド オン</button><button class="muteBtn" id="vibBtn">振動 オン</button><button class="ghost" id="quitBtn">ロビーへ戻る</button></div></div></div>
+<div id="pause" class="overlay" hidden><div class="card"><h3>PAUSE</h3><div class="col"><button class="bigbtn" id="resumeBtn">再開する</button><button class="muteBtn">サウンド オン</button><button class="muteBtn" id="brBtn">明るさ：明るい</button><button class="muteBtn" id="vibBtn">振動 オン</button><button class="ghost" id="quitBtn">ロビーへ戻る</button></div></div></div>
 
 <div id="bigmap" class="overlay" hidden><canvas id="bigCanvas"></canvas><p><span><i style="background:#fff;border-radius:50%"></i>自分</span><span><i style="background:#5ae6ff"></i>通気口</span><span><i style="background:#e0a030"></i>シャッター / ジップライン</span><span><i style="background:#ff5040"></i>破損・封鎖</span><span>タップで閉じる</span></p></div>
 
@@ -1214,9 +1214,9 @@ mini.addEventListener('click',()=>{S.click();toggleBigMap();});$('bigmap').addEv
 // ================= game flow =================
 // ================= chapters / story =================
 // ---- difficulty: chapter curve x dive depth ----
-const CH_DIFF={1:{amb:0.84,lampK:1.9,flash:9.2,spd:0,vis:8,lunge:9,brk:0.1},2:{amb:0.925,lampK:1.25,flash:8.2,spd:-0.3,vis:7.2,lunge:1.7,brk:0.1},3:{amb:0.955,lampK:0.8,flash:7.6,spd:0,vis:8.5,lunge:1,brk:0.15},4:{amb:0.972,lampK:0.5,flash:7,spd:0.35,vis:11,lunge:0.7,brk:0.3}};
+const CH_DIFF={1:{amb:0.55,lampK:2.2,flash:10,spd:0,vis:8,lunge:9,brk:0.1},2:{amb:0.78,lampK:1.6,flash:9,spd:-0.3,vis:7.2,lunge:1.7,brk:0.1},3:{amb:0.87,lampK:1.2,flash:8.2,spd:0,vis:8.5,lunge:1,brk:0.15},4:{amb:0.92,lampK:0.9,flash:7.6,spd:0.35,vis:11,lunge:0.7,brk:0.3}};
 const depth=()=>Math.min(3,SAVE.escapes||0);
-function D(){const c=CH_DIFF[G.ch]||CH_DIFF[3],d=G.depth||0;return {amb:Math.min(0.985,c.amb+d*0.009),lampK:c.lampK*(1-d*0.12),flash:c.flash-d*0.35,spd:c.spd+d*0.12,vis:c.vis+d*0.6,lunge:c.lunge*(1-d*0.12),brk:Math.min(0.45,c.brk+d*0.05)};}
+const BRIGHT=[0,0.12,0.24];function D(){const c=CH_DIFF[G.ch]||CH_DIFF[3],d=G.depth||0;const bk=BRIGHT[SAVE.bright==null?(isTouch?1:0):SAVE.bright]||0;return {amb:Math.max(0.3,Math.min(0.97,c.amb+d*0.012)-bk),lampK:c.lampK*(1-d*0.12),flash:c.flash-d*0.35,spd:c.spd+d*0.12,vis:c.vis+d*0.6,lunge:c.lunge*(1-d*0.12),brk:Math.min(0.45,c.brk+d*0.05)};}
 const DEPTH_TXT=['','前回、ECHO-01は回収できなかった。','潜るたびに、艦内の音が近くなっている。','本部との通信に、知らない声が混ざる。'];
 
 const CH1_DOCS=['diary','photo','phone','voice'];
@@ -1464,6 +1464,7 @@ function render(){
  // map
  let srcX=cx,srcY=cy,dX=0,dY=0,w=VW,h=VH;if(srcX<0){dX=-srcX;w+=srcX;srcX=0;}if(srcY<0){dY=-srcY;h+=srcY;srcY=0;}w=Math.min(w,MW*T-srcX);h=Math.min(h,MH*T-srcY);
  if(w>0&&h>0)ctx.drawImage(mapC,srcX*PS,srcY*PS,w*PS,h*PS,dX,dY,w,h);
+ {const ex=([0,0.16,0.1,0.05,0.02][G.ch]||0.04)+0.04*(SAVE.bright==null?(isTouch?1:0):SAVE.bright);if(ex>0){ctx.globalCompositeOperation='lighter';ctx.fillStyle=`rgba(70,78,84,${ex})`;ctx.fillRect(0,0,VW,VH);ctx.globalCompositeOperation='source-over';}}
  ctx.save();ctx.translate(-cx,-cy);
  const inView=(x,y,m=2)=>x*T>cx-m*T&&x*T<cx+VW+m*T&&y*T>cy-m*T&&y*T<cy+VH+m*T;
  // dock water & sub
@@ -1490,7 +1491,7 @@ function render(){
  // ---- darkness ----
  const nv=P.nvT>0;
  const room=roomAt(P.x,P.y);const darkRoom=room&&room.dark;
- const DD=D();const amb=G.blackout>0?0.995:nv?0.55:darkRoom?Math.max(0.975,DD.amb):DD.amb;
+ const DD=D();const amb=G.blackout>0?0.99:nv?0.45:darkRoom?Math.min(0.96,DD.amb+0.08):DD.amb;
  fctx.setTransform(1,0,0,1,0,0);fctx.globalAlpha=1;fctx.globalCompositeOperation='source-over';fctx.clearRect(0,0,fog.width,fog.height);
  fctx.fillStyle=`rgba(2,3,6,${amb})`;fctx.fillRect(0,0,fog.width,fog.height);
  fctx.globalCompositeOperation='destination-out';fctx.setTransform(FS,0,0,FS,-cx*FS,-cy*FS);
@@ -1528,7 +1529,7 @@ function render(){
  // grain
  ctx.save();ctx.globalCompositeOperation='overlay';ctx.globalAlpha=0.16;ctx.fillStyle=grainPat;ctx.translate(-rand(0,160),-rand(0,160));ctx.fillRect(0,0,VW+160,VH+160);ctx.restore();
  // vignette + danger
- const vg=ctx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.3,VW/2,VH/2,Math.max(VW,VH)*0.72);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.75)');ctx.fillStyle=vg;ctx.fillRect(0,0,VW,VH);
+ const vg=ctx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.3,VW/2,VH/2,Math.max(VW,VH)*0.72);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.5)');ctx.fillStyle=vg;ctx.fillRect(0,0,VW,VH);
  if(G.redPulse>0){const rg=ctx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.25,VW/2,VH/2,Math.max(VW,VH)*0.7);rg.addColorStop(0,'rgba(180,0,0,0)');rg.addColorStop(1,`rgba(180,0,0,${G.redPulse*0.45})`);ctx.fillStyle=rg;ctx.fillRect(0,0,VW,VH);}
  if(G.flash>0){ctx.fillStyle=G.state==='caught'?`rgba(120,0,0,${G.flash})`:`rgba(255,240,220,${G.flash*0.5})`;ctx.fillRect(0,0,VW,VH);}
  if(G.state==='caught'){drawJumpscare(G.caughtT);}
@@ -1741,7 +1742,8 @@ $('resumeBtn').onclick=()=>resumeGame();
 $('quitBtn').onclick=()=>toLobby();
 $('docClose').onclick=()=>{if(performance.now()-(G.docAt||0)<500)return;S.click();closeDoc();};
 $('docVoiceBtn').onclick=()=>{const b=$('docVoiceBtn');b.disabled=true;b.textContent='再生中…';$('wave').classList.add('play');speakVoiceLog(()=>{b.disabled=false;b.textContent='もう一度再生';$('wave').classList.remove('play');});};
-const vibTxt=()=>{const b=$('vibBtn');if(b){b.textContent=SAVE.vib===false?'振動 オフ':'振動 オン';b.hidden=!navigator.vibrate;}};
+const brTxt=()=>{const b=$('brBtn');if(b){const v=SAVE.bright==null?(isTouch?1:0):SAVE.bright;b.textContent='明るさ：'+['ふつう','明るい','とても明るい'][v];}};
+const vibTxt=()=>{brTxt();const b=$('vibBtn');if(b){b.textContent=SAVE.vib===false?'振動 オフ':'振動 オン';b.hidden=!navigator.vibrate;}};
 const muteTxt=()=>{vibTxt();const t=Snd.muted?'サウンド オフ':'サウンド オン';document.querySelectorAll('.muteBtn').forEach(b=>b.textContent=t);};
 document.querySelectorAll('.muteBtn').forEach(b=>b.onclick=()=>{Snd.init();Snd.toggle();muteTxt();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(G.state==='play')pauseGame();else Snd.suspend();}else if(!G.paused)Snd.resume();});
@@ -2037,7 +2039,7 @@ function fsHelp(inFrame){$('fsHelp').hidden=false;$('fsWhy').textContent=inFrame
 // ---- fit to the visible part when embedded (e.g. claude.ai viewer cuts the frame) ----
 const VIS={t:0,b:0};
 (function(){
- if(!('IntersectionObserver' in window))return;
+ if(!('IntersectionObserver' in window))return;let emb=false;try{emb=window.self!==window.top;}catch(e){emb=true;}if(!emb)return;
  const pr=document.createElement('div');pr.style.cssText='position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;opacity:0;z-index:-1';document.body.appendChild(pr);
  const th=[];for(let i=0;i<=200;i++)th.push(i/200);
  new IntersectionObserver(es=>{const e=es[es.length-1];const r=e.intersectionRect,H=innerHeight;let t=0,b=0;
@@ -2057,7 +2059,7 @@ function frame(now){
 }
 $('exhibitImg').src=IMG.echo_main||'';
 buildMiniBase();resize();updateCredits();muteTxt();showScreen('lobby');setTimeout(dailyBonus,600);
-$('fsBtn').onclick=()=>goFS();$('vibBtn').onclick=()=>{SAVE.vib=SAVE.vib===false;save();vibTxt();vib(60);};$('fsLobby').onclick=()=>{Snd.init();goFS();};$('fsClose').onclick=()=>{$('fsHelp').hidden=true;};$('dailyOk').onclick=()=>{S.click();$('daily').hidden=true;};
+$('fsBtn').onclick=()=>goFS();$('brBtn').onclick=()=>{const v=SAVE.bright==null?(isTouch?1:0):SAVE.bright;SAVE.bright=(v+1)%3;save();brTxt();};$('vibBtn').onclick=()=>{SAVE.vib=SAVE.vib===false;save();vibTxt();vib(60);};$('fsLobby').onclick=()=>{Snd.init();goFS();};$('fsClose').onclick=()=>{$('fsHelp').hidden=true;};$('dailyOk').onclick=()=>{S.click();$('daily').hidden=true;};
 if(navigator.standalone||matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches){document.body.classList.add('app');}
 requestAnimationFrame(frame);
 window.__sub={G,get P(){return P;},get E(){return E;},docs,startGame,startChapter,advanceChapter,LOCKERS,gates,answerReport,openDoc,closeDoc,findPath,setEchoState,doUnlock,shutters,tile,ROLES,setRole:r=>{role=ROLES.find(x=>x.id===r)||role;}};
