@@ -246,6 +246,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
 .role .ri{display:flex;align-items:center;justify-content:center;color:var(--rc);}#roleTag svg,.rchip svg{vertical-align:-2px;}
 #bpIcon{color:var(--amber);}.bdg i{color:var(--amber);}
 .item .ghost.sm{white-space:normal;max-width:120px;line-height:1.35;flex:none;}.item .in b{word-break:keep-all;}
+.mapSel{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;font-size:12px;color:var(--dim);}.mapSel .rchip small{display:block;font-size:10px;color:var(--dim);}
 /* result */
 #result{align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at center,#131a1e,#05070a 70%);}
 #result.lose{background:radial-gradient(ellipse at center,#2a0806,#050303 70%);}
@@ -318,13 +319,14 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 1.9（ボス戦・ショップ刷新）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 2.0（ワイドマップ・下層区画）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
  <div class="head"><h2><small>SELECT ROLE</small>役職を選ぶ</h2><button class="back">戻る</button></div>
  <div class="scroll"><div id="roleList"></div></div>
- <div class="goRow"><p>ECHO-01は倒せない。見つかったら逃げろ。<br>シャッター・通気口・ジップラインを使え。</p><button class="bigbtn" id="btnGo">潜入する</button></div>
+ <div class="mapSel"><span>マップ</span><button class="rchip" id="mapC">コンパクト<small>いつもの広さ</small></button><button class="rchip" id="mapW">ワイド<small>下層区画つき・約1.5倍</small></button></div>
+ <div class="goRow"><p>見つからずに進め。ECHO-01は途中で目を覚ます。<br>シャッター・通気口・ロッカー・アイテムを使え。</p><button class="bigbtn" id="btnGo">潜入する</button></div>
 </section>
 
 <section id="coop" class="screen" hidden>
@@ -434,12 +436,12 @@ const DOCS=[
  {id:'voice',title:'音声ログ',img:'voice',x:28,y:5,voice:true,text:'「逃げて、あいつが暴走した！\nこの録音を聞いてる人、\n本当は実験に人間は使わないはずだっ……」\n\n（録音はここで途切れている）'},
  {id:'photo',title:'写真',img:'photo',x:14,y:13,text:'ロッドと息子の写真。\nしかし、よく見ると子供の脳の部分がくり抜かれている。'},
  {id:'phone',title:'スマホのメッセージ',img:'phone',x:6,y:32,text:'受信メッセージ\n\n「捕獲は完了したか？」　23:04\n「はい。」　　　　　　　23:07\n\n送信者：不明'},
- {id:'bp1',title:'設計図①　通常の機械兵器',img:'bp1',x:28,y:29,text:'ECHO-01 設計図。\n6本の脚と強化腕を持つ、通常の機械兵器の設計図。'},
+ {id:'bp1',title:'設計図①　通常の機械兵器',img:'bp1',x:28,y:29,wroom:'rctl',text:'ECHO-01 設計図。\n6本の脚と強化腕を持つ、通常の機械兵器の設計図。'},
  {id:'bp2',title:'設計図②　特殊な設計図',img:'bp2',x:39,y:20,hidden:true,text:'ECHO-01 設計図（機密）\n\n実験対象：ロア\n脳の構造をベースにした制御システムの設計図。'},
 ];
 const NEED=4;
 const ROLES=[
- {id:'agent',name:'エージェント',icon:'🔫',item:'ショットガン',desc:'ECHO-01を撃って2.5秒怯ませる。倒すことはできない。弾は3発。',skill:'発砲',col:'#c8503c'},
+ {id:'agent',name:'エージェント',icon:'🔫',item:'ショットガン',desc:'ECHO-01を撃って2.5秒怯ませる。弾は3発。（倒すには最終章の電磁パイロン）',skill:'発砲',col:'#c8503c'},
  {id:'medic',name:'医者',icon:'🩺',item:'包帯',desc:'ECHO-01に捕まっても、包帯で1度だけ立ち上がれる。',skill:null,col:'#e6e6e0'},
  {id:'mech',name:'整備士',icon:'🔧',item:'ペンチ',desc:'壊れたシャッターを修理できる。シャッターを素早く閉められる。',skill:null,col:'#e0a030'},
  {id:'scout',name:'調査員',icon:'🔎',item:'調査用アイテム',desc:'5秒間スタミナ無限。未回収の資料が光って見える。',skill:'スタミナ無限',col:'#4ab0d0'},
@@ -461,9 +463,9 @@ const SHOP=[
 ];
 
 // ================= map =================
-const MW=63,MH=35,T=48;
+const MW=63,MH_ALL=55,T=48;let MH=35;let WIDE=false;
 const WALL=0,FLOOR=1,SHUT=2,SOFT=3,OBST=4,GATE=5,WATER=6;
-const grid=new Uint8Array(MW*MH);const roomOf=new Int16Array(MW*MH).fill(-1);
+const grid=new Uint8Array(MW*MH_ALL);const roomOf=new Int16Array(MW*MH_ALL).fill(-1);
 const I=(x,y)=>y*MW+x;
 const tile=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?WALL:grid[I(x,y)];
 const ROOMS=[
@@ -488,14 +490,23 @@ const ROOMS=[
  {id:'bk',name:'ECHO-01関連施設',sec:'研究区画',x:37,y:19,w:12,h:12,st:'lab',dark:true},
  {id:'lower',name:'下層通路',sec:'機関区画',x:10,y:32,w:39,h:2,st:'corr'},
  {id:'hangar',name:'ミニサブマリン格納庫',sec:'最終脱出区画',x:50,y:19,w:12,h:15,st:'hangar'},
+ {id:'cargo',name:'貨物倉庫',sec:'下層区画',x:2,y:36,w:19,h:6,st:'store',wide:1},
+ {id:'rctl',name:'原子炉制御室',sec:'下層区画',x:22,y:36,w:13,h:6,st:'control',wide:1},
+ {id:'mat',name:'資材庫',sec:'下層区画',x:36,y:36,w:13,h:6,st:'store',wide:1},
+ {id:'low2',name:'下層主通路',sec:'下層区画',x:2,y:43,w:47,h:2,st:'corr',wide:1},
+ {id:'crewb',name:'乗員区画B',sec:'下層区画',x:2,y:46,w:11,h:8,st:'living',wide:1},
+ {id:'core',name:'原子炉',sec:'下層区画',x:14,y:46,w:21,h:8,st:'engine',dark:true,wide:1},
+ {id:'pump',name:'冷却ポンプ室',sec:'下層区画',x:36,y:46,w:13,h:8,st:'engine',wide:1},
 ];
 const DOORS=[
  [5,8,'d'],[9,4,'d'],[5,15,'s'],[12,15,'d'],[16,5,'s'],[20,8,'d'],[24,4,'d'],[20,15,'s'],[28,8,'d'],[28,15,'d'],[24,12,'w'],[32,4,'w'],
  [36,15,'r'],[39,15,'r'],[41,4,'d'],[45,8,'d'],[45,15,'r'],[49,5,'r'],[55,15,'d'],
  [5,18,'s'],[9,30,'d'],[10,18,'d'],[11,18,'d'],[17,18,'d'],[21,18,'s'],[12,24,'w'],[15,31,'d'],[23,21,'d'],[26,18,'s'],[27,25,'d'],[26,31,'d'],
- [30,28,'d'],[33,18,'d'],[33,31,'w'],[36,24,'r'],[40,18,'r'],[46,18,'r'],[44,31,'r'],[49,32,'g'],[49,33,'g'],[55,18,'g'],[56,18,'g']
+ [30,28,'d'],[33,18,'d'],[33,31,'w'],[36,24,'r'],[40,18,'r'],[46,18,'r'],[44,31,'r'],[49,32,'g'],[49,33,'g'],[55,18,'g'],[56,18,'g'],
+ [14,34,'d',1],[14,35,'d',1],[28,34,'d',1],[28,35,'s',1],[44,34,'d',1],[44,35,'d',1],[8,42,'d',1],[17,42,'s',1],[28,42,'d',1],[42,42,'d',1],
+ [7,45,'d',1],[20,45,'s',1],[30,45,'d',1],[42,45,'d',1],[21,39,'w',1],[35,38,'d',1],[13,50,'d',1],[35,49,'w',1]
 ];
-const FURN=[
+const FURN=[];const FURN_ALL=[
  {t:'bunk',x:2,y:2,w:2,h:1},{t:'bunk',x:6,y:2,w:2,h:1},{t:'locker',x:8,y:5,w:1,h:2},
  {t:'medbed',x:2,y:9,w:2,h:1},{t:'medbed',x:6,y:9,w:2,h:1},{t:'cabinet',x:8,y:12,w:1,h:2},
  {t:'table',x:12,y:5,w:2,h:2},{t:'table',x:12,y:9,w:2,h:2},{t:'counter',x:10,y:2,w:3,h:1},
@@ -512,18 +523,25 @@ const FURN=[
  {t:'pod',x:41,y:23,w:3,h:3},{t:'console',x:38,y:30,w:3,h:1},
  {t:'crate',x:51,y:20,w:2,h:1},{t:'crate',x:60,y:21,w:1,h:2},{t:'crate',x:51,y:30,w:1,h:2},{t:'crate',x:60,y:31,w:1,h:1},
  {t:'locker',x:2,y:23,w:1,h:1},{t:'locker',x:22,y:19,w:1,h:1},{t:'locker',x:29,y:30,w:1,h:1},{t:'locker',x:35,y:30,w:1,h:1},{t:'locker',x:40,y:13,w:1,h:1},{t:'locker',x:48,y:20,w:1,h:1},{t:'locker',x:61,y:25,w:1,h:1},{t:'locker',x:23,y:13,w:1,h:1},{t:'locker',x:31,y:7,w:1,h:1},{t:'locker',x:31,y:9,w:1,h:1},{t:'locker',x:8,y:9,w:1,h:1},{t:'locker',x:15,y:9,w:1,h:1},
- {t:'breaker',x:29,y:24,w:1,h:1},{t:'breaker',x:29,y:26,w:1,h:1},{t:'breaker',x:31,y:26,w:1,h:1},
+ {t:'breaker',x:29,y:24,w:1,h:1,cmp:1},{t:'breaker',x:29,y:26,w:1,h:1,cmp:1},{t:'breaker',x:31,y:26,w:1,h:1,cmp:1},
+ {t:'crate',x:3,y:37,w:2,h:2,wide:1},{t:'crate',x:8,y:39,w:3,h:1,wide:1},{t:'crate',x:13,y:37,w:1,h:2,wide:1},{t:'crate',x:16,y:40,w:2,h:1,wide:1},{t:'crate',x:19,y:36,w:1,h:1,wide:1},
+ {t:'console',x:23,y:36,w:5,h:1,wide:1},{t:'console',x:30,y:36,w:4,h:1,wide:1},{t:'panel',x:34,y:40,w:1,h:1,wide:1},
+ {t:'shelf',x:37,y:36,w:3,h:1,wide:1},{t:'shelf',x:45,y:36,w:3,h:1,wide:1},{t:'shelf',x:38,y:40,w:4,h:1,wide:1},
+ {t:'bunk',x:2,y:46,w:2,h:1,wide:1},{t:'bunk',x:9,y:46,w:2,h:1,wide:1},{t:'bunk',x:2,y:52,w:2,h:1,wide:1},{t:'locker',x:12,y:47,w:1,h:1,wide:1},
+ {t:'turbine',x:17,y:48,w:2,h:2,wide:1},{t:'turbine',x:23,y:48,w:2,h:2,wide:1},{t:'turbine',x:29,y:48,w:2,h:2,wide:1},{t:'locker',x:34,y:52,w:1,h:1,wide:1},
+ {t:'gen',x:38,y:48,w:2,h:2,wide:1},{t:'gen',x:44,y:48,w:2,h:2,wide:1},{t:'locker',x:48,y:46,w:1,h:1,wide:1},{t:'locker',x:20,y:41,w:1,h:1,wide:1},
+ {t:'breaker',x:34,y:46,w:1,h:1,wide:1},{t:'breaker',x:14,y:53,w:1,h:1,wide:1},{t:'breaker',x:48,y:53,w:1,h:1,wide:1},
 ];
-const VENTS=[[[3,13],[7,20]],[[18,13],[14,20]],[[30,10],[29,20]],[[34,13],[32,29]],[[47,13],[47,29]],[[11,13],[30,3]]];
-const ZIPS=[[[2,16],[31,16]],[[33,17],[60,17]],[[11,33],[47,33]]];
+const VENTS_ALL=[[[4,40],[40,51],1],[[24,39],[10,48],1],[[3,13],[7,20]],[[18,13],[14,20]],[[30,10],[29,20]],[[34,13],[32,29]],[[47,13],[47,29]],[[11,13],[30,3]]];
+const ZIPS_ALL=[[[2,16],[31,16]],[[33,17],[60,17]],[[11,33],[47,33]],[[2,43],[48,44],1]];const VENTS=[],ZIPS=[];
 const DOCK={x:53,y:26,w:6,h:5};
 const shutters=[],shutAt={},gates=[],gateAt={},decals=[];
 const LOCKERS=[],BREAKERS=[];
 let gateOpen=false;
 function buildGrid(){
  grid.fill(WALL);roomOf.fill(-1);shutters.length=0;gates.length=0;decals.length=0;for(const k in shutAt)delete shutAt[k];for(const k in gateAt)delete gateAt[k];
- ROOMS.forEach((r,i)=>{for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){grid[I(x,y)]=FLOOR;roomOf[I(x,y)]=i;}});
- for(const [x,y,t] of DOORS){
+ ROOMS.forEach((r,i)=>{if(r.wide&&!WIDE)return;for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){grid[I(x,y)]=FLOOR;roomOf[I(x,y)]=i;}});
+ for(const [x,y,t,w] of DOORS){if(w&&!WIDE)continue;
   if(t==='d')grid[I(x,y)]=FLOOR;
   else if(t==='s'){grid[I(x,y)]=SHUT;const s={x,y,closed:false,broken:false,anim:0,pound:0,ignoreT:0,horiz:tile(x-1,y)===WALL||tile(x+1,y)===WALL};shutters.push(s);shutAt[I(x,y)]=s;}
   else if(t==='w')grid[I(x,y)]=SOFT;
@@ -533,8 +551,13 @@ function buildGrid(){
  for(let y=DOCK.y;y<DOCK.y+DOCK.h;y++)for(let x=DOCK.x;x<DOCK.x+DOCK.w;x++)grid[I(x,y)]=WATER;
  gateOpen=false;
 }
-buildGrid();
-for(const f of FURN){if(f.t==='locker')for(let y=f.y;y<f.y+f.h;y++)LOCKERS.push({x:f.x,y});if(f.t==='breaker')BREAKERS.push({x:f.x,y:f.y});}
+function applyMapMode(w){WIDE=!!w;MH=WIDE?55:35;
+ FURN.length=0;for(const f of FURN_ALL){if(f.wide&&!WIDE)continue;if(f.cmp&&WIDE)continue;FURN.push(f);}
+ VENTS.length=0;for(const v of VENTS_ALL)if(!v[2]||WIDE)VENTS.push([v[0],v[1]]);
+ ZIPS.length=0;for(const z of ZIPS_ALL)if(!z[2]||WIDE)ZIPS.push([z[0],z[1]]);
+ LOCKERS.length=0;BREAKERS.length=0;for(const f of FURN){if(f.t==='locker')for(let y=f.y;y<f.y+f.h;y++)LOCKERS.push({x:f.x,y});if(f.t==='breaker')BREAKERS.push({x:f.x,y:f.y});}}
+function mapSetup(w){applyMapMode(w);buildLights();resizeMini();}
+applyMapMode(false);buildGrid();
 const roomAt=(x,y)=>{const r=roomOf[I(Math.floor(x),Math.floor(y))];return r>=0?ROOMS[r]:null;};
 function opaque(x,y){const t=tile(x,y);if(t===WALL||t===SOFT)return true;if(t===SHUT){const s=shutAt[I(x,y)];return s.closed&&!s.broken;}if(t===GATE)return !gateAt[I(x,y)].open;return false;}
 function solidP(x,y,ignoreObst){const t=tile(x,y);if(t===WALL||t===SOFT||t===WATER)return true;if(t===OBST)return !ignoreObst;if(t===SHUT){const s=shutAt[I(x,y)];return s.closed&&!s.broken;}if(t===GATE)return !gateAt[I(x,y)].open;return false;}
@@ -686,12 +709,13 @@ const cvs=$('game'),ctx=cvs.getContext('2d',{alpha:false});
 let DPR=1,VW=900,VH=560,SCALE=1,CW=1,CH=1;
 const fog=document.createElement('canvas'),fctx=fog.getContext('2d');const FS=0.5;
 let mapC=null,mctx=null,PS=1;
+function psFor(){const mx=WIDE?1.15:1.4;return clamp(Math.min(mx,DPR*SCALE),1,mx);}
 function resize(){
  CW=innerWidth;CH=Math.max(200,innerHeight-VIS.t-VIS.b);DPR=Math.min(devicePixelRatio||1,2);
  cvs.width=Math.round(CW*DPR);cvs.height=Math.round(CH*DPR);cvs.style.width=CW+'px';cvs.style.height=CH+'px';cvs.style.top=VIS.t+'px';
  const a=CW/CH;if(a>=1){VH=560;VW=VH*a;}else{VW=560;VH=VW/a;}SCALE=CW/VW;
  fog.width=Math.ceil(VW*FS);fog.height=Math.ceil(VH*FS);
- const ps=clamp(Math.min(1.4,DPR*SCALE),1,1.4);if(!mapC||Math.abs(ps-PS)>0.12)buildMap(ps);
+ const ps=psFor();if(!mapC||Math.abs(ps-PS)>0.12)buildMap(ps);
  updateTouchUI();
 }
 const GLOWC={red:'255,40,24',amber:'255,170,60',cyan:'90,230,255',white:'255,255,255',green:'120,255,150',warm:'255,220,170',blood:'200,10,0'};
@@ -835,7 +859,7 @@ function drawVent(x,y){const c=mctx,X=x*T+8,Y=y*T+8,s=T-16;c.fillStyle='#07090b'
 function drawZipPost(x,y){const c=mctx,cx=x*T+T/2,cy=y*T+T/2;c.fillStyle='rgba(0,0,0,.5)';c.beginPath();c.ellipse(cx+3,cy+4,12,8,0,0,TAU);c.fill();c.fillStyle='#3a3226';c.beginPath();c.arc(cx,cy,10,0,TAU);c.fill();c.strokeStyle='#e0a030';c.lineWidth=3;c.beginPath();c.arc(cx,cy,10,0,TAU);c.stroke();c.fillStyle='#111';c.beginPath();c.arc(cx,cy,4,0,TAU);c.fill();}
 function drawLabels(){
  const c=mctx;c.save();c.textAlign='center';c.textBaseline='middle';
- for(const r of ROOMS){if(r.id==='main'||r.id==='lower'||r.id==='pass')continue;c.font='900 15px "Zen Kaku Gothic New",sans-serif';c.fillStyle='rgba(230,225,210,.1)';c.fillText(r.name,(r.x+r.w/2)*T,(r.y+0.9)*T);}
+ for(const r of ROOMS){if(r.id==='main'||r.id==='lower'||r.id==='pass'||r.id==='low2'||(r.wide&&!WIDE))continue;c.font='900 15px "Zen Kaku Gothic New",sans-serif';c.fillStyle='rgba(230,225,210,.1)';c.fillText(r.name,(r.x+r.w/2)*T,(r.y+0.9)*T);}
  c.font='900 12px "Zen Kaku Gothic New",sans-serif';c.fillStyle='rgba(224,160,48,.18)';
  [['← 居住区',6,17],['管制区画',20,17],['研究区画 →',40,17],['最終脱出区画',55,17],['機関区画',24,33]].forEach(([t,x,y])=>c.fillText(t,x*T,y*T+T*0.5));
  c.restore();
@@ -908,7 +932,7 @@ function spat(x,y,range=16){const dx=x-P.x,dy=y-P.y,d=Math.hypot(dx,dy);let v=cl
 function makeNoise(x,y,r){if(!E||G.state!=='play')return;const d=Math.hypot(E.x-x,E.y-y);if(d<r&&E.state!=='chase'&&E.stunT<=0){E.last=[x,y];setEchoState('search');E.searchT=5;}}
 
 // ================= pathfinding =================
-const dist=new Float64Array(MW*MH),prev=new Int32Array(MW*MH);
+const dist=new Float64Array(MW*MH_ALL),prev=new Int32Array(MW*MH_ALL);
 function echoCost(x,y,hunting){const t=tile(x,y);switch(t){case FLOOR:return 1;case OBST:return 2.4;case SOFT:return hunting&&!(E&&E.dormant)?5:Infinity;case SHUT:{const s=shutAt[I(x,y)];if(!s.closed||s.broken)return 1;if(s.ignoreT>0)return Infinity;return hunting?6:Infinity;}case GATE:return gateAt[I(x,y)].open?1:Infinity;default:return Infinity;}}
 function findPath(sx,sy,tx,ty,hunting){
  sx=Math.floor(sx);sy=Math.floor(sy);tx=Math.floor(tx);ty=Math.floor(ty);
@@ -939,7 +963,7 @@ function seesP(P){
  return los(hx,hy,P.x,P.y)||los(E.x,E.y,P.x,P.y);
 }
 function randomRoomTarget(){
- const cand=ROOMS.filter(r=>r.id!=='hangar'||G.ch>=4);let r=cand[Math.floor(Math.random()*cand.length)];
+ const cand=ROOMS.filter(r=>(r.id!=='hangar'||G.ch>=4)&&(!r.wide||WIDE));let r=cand[Math.floor(Math.random()*cand.length)];
  if(G.ch===2&&Math.random()<0.65){const m=ROOMS.filter(q=>['engine','power','maint','dist','lower','pass','main','store'].includes(q.id));r=m[Math.floor(Math.random()*m.length)];}
  if(G.unlocked||Math.random()<Math.min(0.5,G.runT/200)){const pr=roomAt(P.x,P.y);if(pr&&Math.random()<0.6)r=pr;}
  for(let k=0;k<20;k++){const x=r.x+Math.floor(Math.random()*r.w),y=r.y+Math.floor(Math.random()*r.h);if(tile(x,y)===FLOOR)return [x+0.5,y+0.5];}
@@ -1231,7 +1255,8 @@ function banner(t,s){netEv('banner',t,s);$('bannerT').textContent=t;$('bannerS')
 function updateCredits(){document.querySelectorAll('.credits').forEach(el=>el.textContent=SAVE.credits.toLocaleString());const bl=document.getElementById('badgeLv');if(bl)bl.textContent=`${(SAVE.badges||[]).length}/${BADGES.length}`;const dl=document.getElementById('depthLv');if(dl){const d=Math.min(3,SAVE.escapes||0);dl.textContent=d;document.getElementById('depthChip').title=d?DEPTH_TXT[d]:'脱出するたびに深度が上がる';}}
 function equipCol(type){const id=SAVE.equip[type];const it=SHOP.find(s=>s.id===id)||SHOP.find(s=>s.type===type);return it.col;}
 // roles
-function buildRoles(){const box=$('roleList');box.innerHTML='';ROLES.forEach(r=>{const b=document.createElement('button');b.className='role'+(r===role?' sel':'');b.innerHTML=`<span class="ri">${ICO[r.id]}</span><span class="rn">${r.name}</span><span class="rit">${r.item}</span><span class="rd">${r.desc}</span>`;b.style.setProperty('--rc',r.col);b.onclick=()=>{role=r;S.click();buildRoles();};box.appendChild(b);});}
+function mapSelUI(){const w=SAVE.mapMode==='wide';$('mapC').classList.toggle('sel',!w);$('mapW').classList.toggle('sel',w);}
+function buildRoles(){mapSelUI();const box=$('roleList');box.innerHTML='';ROLES.forEach(r=>{const b=document.createElement('button');b.className='role'+(r===role?' sel':'');b.innerHTML=`<span class="ri">${ICO[r.id]}</span><span class="rn">${r.name}</span><span class="rit">${r.item}</span><span class="rd">${r.desc}</span>`;b.style.setProperty('--rc',r.col);b.onclick=()=>{role=r;S.click();buildRoles();};box.appendChild(b);});}
 // archive
 function buildArchive(){const box=$('arcList');box.innerHTML='';
  const mk=(title,img,locked,onclick)=>{const b=document.createElement('button');b.className='arc'+(locked?' locked':'');b.innerHTML=locked?`<span class="lk">未発見</span>`:`<img alt="" src="${img}"><span>${title}</span>`;b.disabled=locked;if(!locked)b.onclick=onclick;box.appendChild(b);};
@@ -1243,6 +1268,7 @@ function buildShopOld(){}
 // minimap
 const mini=$('mini'),mm=mini.getContext('2d');const MS=3;mini.width=MW*MS;mini.height=MH*MS;
 const miniBase=document.createElement('canvas');miniBase.width=MW*MS;miniBase.height=MH*MS;
+function resizeMini(){mini.width=MW*MS;mini.height=MH*MS;miniBase.width=MW*MS;miniBase.height=MH*MS;mini.style.aspectRatio=`${MW}/${MH}`;}
 function buildMiniBase(){const c=miniBase.getContext('2d');c.clearRect(0,0,miniBase.width,miniBase.height);for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const t=tile(x,y);if(t===WALL)continue;const r=roomOf[I(x,y)];c.fillStyle=t===WATER?'#0c2a36':t===OBST?'#3a4046':t===SOFT?'#5a4a2a':(r>=0&&ROOMS[r].st!=='corr')?'#56606a':'#3a444c';c.fillRect(x*MS,y*MS,MS,MS);}}
 function drawMini(target,s,big){
  const c=target;c.clearRect(0,0,MW*s,MH*s);c.drawImage(miniBase,0,0,MW*s,MH*s);
@@ -1251,7 +1277,7 @@ function drawMini(target,s,big){
  for(const sh of shutters){c.fillStyle=sh.broken?'#ff5040':sh.closed?'#e0a030':'#7a8a60';c.fillRect(sh.x*s,sh.y*s,s,s);}
  for(const g of gates){c.fillStyle=g.open?'#50d080':g.grp==='research'?'#b04030':'#ff5040';c.fillRect(g.x*s,g.y*s,s,s);}
  if(G.unlocked&&Math.floor(G.t*3)%2===0){c.strokeStyle='#50d080';c.lineWidth=Math.max(1.5,s*0.4);c.strokeRect(DOCK.x*s-1,DOCK.y*s-1,DOCK.w*s+2,DOCK.h*s+2);}
- if(big){c.fillStyle='rgba(233,230,220,.8)';c.font=`700 ${Math.round(s*0.9)}px "Zen Kaku Gothic New",sans-serif`;c.textAlign='center';for(const r of ROOMS){if(r.id==='main'||r.id==='lower'||r.id==='pass')continue;c.fillText(r.name,(r.x+r.w/2)*s,(r.y+r.h/2)*s);}}
+ if(big){c.fillStyle='rgba(233,230,220,.8)';c.font=`700 ${Math.round(s*0.9)}px "Zen Kaku Gothic New",sans-serif`;c.textAlign='center';for(const r of ROOMS){if(r.id==='main'||r.id==='lower'||r.id==='pass'||r.id==='low2'||(r.wide&&!WIDE))continue;c.fillText(r.name,(r.x+r.w/2)*s,(r.y+r.h/2)*s);}}
  for(const g of G.guards||[])if(g.seen&&!(g.sleep>0)){c.fillStyle=g.state==='alert'?'#ff3020':'#ffb040';c.strokeStyle=c.fillStyle;c.lineWidth=Math.max(1,s*0.3);c.beginPath();c.arc(g.x*s,g.y*s,Math.max(1.8,s*0.5),0,TAU);c.fill();c.beginPath();c.moveTo(g.x*s,g.y*s);c.lineTo((g.x+Math.cos(g.a)*1.8)*s,(g.y+Math.sin(g.a)*1.8)*s);c.stroke();}
  for(const q of G.cams||[])if(q.seen){c.fillStyle=q.dead?'#555':'#ff6040';c.fillRect(q.x*s,q.y*s,s,s);}
  for(const q of G.crawl||[])if(q.seen){c.fillStyle='#ff9060';c.beginPath();c.arc(q.x*s,q.y*s,Math.max(1.4,s*0.35),0,TAU);c.fill();}
@@ -1274,7 +1300,7 @@ const CH1_DOCS=['diary','photo','phone','voice'];
 const chDocs=()=>CH1_DOCS.filter(id=>G.docsRun.has(id)).length;
 const CHAPTERS=[null,
  {tag:'CHAPTER 1',name:'沈黙した潜水艦',goal:()=>`居住区・管制区画で手がかりを探せ　${Math.min(3,chDocs())} / 3`,spawn:[3.5,17]},
- {tag:'CHAPTER 2',name:'機関区画',goal:()=>`配電盤を起動して電源を復旧せよ　${(G.breakers||[]).filter(b=>b.on).length} / 3`,spawn:[11,17.5]},
+ {tag:'CHAPTER 2',name:'機関区画',goal:()=>(WIDE?'下層の原子炉で配電盤を起動せよ':'配電盤を起動して電源を復旧せよ')+`　${(G.breakers||[]).filter(b=>b.on).length} / 3`,spawn:[11,17.5]},
  {tag:'CHAPTER 3',name:'研究区画',goal:()=>'ECHO-01関連施設で《機密ファイル》を探せ',spawn:[29.5,17]},
  {tag:'FINAL',name:'決戦',goal:()=>G.bossDown?'格納庫のミニサブマリンで脱出しろ':G.coreT>0?'コアが露出！ ECHO-01に近づいてとどめを刺せ':`電磁パイロンでECHO-01を倒せ（残り装甲 ${G.bossHP==null?3:G.bossHP}）`,spawn:[42.5,20.5]},
  {tag:'ESCAPE',name:'海面へ',goal:()=>'ECHO-01を振り切って海面まで逃げろ',spawn:[42.5,20.5]},
@@ -1282,6 +1308,7 @@ const CHAPTERS=[null,
 const RADIO={
  1:'本部より。艦内の電源はほぼ落ちている。まずは居住区と管制区画で、何が起きたのか調べてくれ。',
  2:'研究区画の隔壁は、電源が無いと開かない。機関区画で配電盤を3つ起動しろ。',
+ w2:'研究区画の隔壁は、電源が無いと開かない。電源は下層区画の原子炉だ。下層へ降りて、配電盤を3つ起動しろ。',
  3:'電源が戻った。研究区画の隔壁が開く。ECHO-01関連施設に《機密ファイル》があるはずだ。',
  4:'ECHO-01が格納庫へ向かっている！ 格納庫の電磁パイロン3基で止めろ。止めない限り、ミニサブマリンは出せない！',
 };
@@ -1304,7 +1331,7 @@ function clearRadio(){radioQ=[];clearInterval(nextRadio._iv);$('radio').classLis
 function placeDocs(){
  const used=new Set(),bad=new Set();
  for(const v of VENTS)for(const p of v)bad.add(I(p[0],p[1]));for(const z of ZIPS)for(const p of z)bad.add(I(p[0],p[1]));
- for(const d of docs){if(d.got)continue;const Rm=ROOMS[roomOf[I(d.ox,d.oy)]];const c=[];
+ for(const d of docs){if(d.got)continue;const Rm=(WIDE&&d.wroom)?ROOMS.find(r=>r.id===d.wroom):ROOMS[roomOf[I(d.ox,d.oy)]];const c=[];
   for(let y=Rm.y;y<Rm.y+Rm.h;y++)for(let x=Rm.x;x<Rm.x+Rm.w;x++){const k=I(x,y);if(grid[k]!==FLOOR||bad.has(k)||used.has(k))continue;let ok=true;
    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const t=tile(x+dx,y+dy);if(t===SHUT||t===GATE||(t===FLOOR&&roomOf[I(x+dx,y+dy)]<0))ok=false;}
    if(ok)c.push([x,y]);}
@@ -1328,7 +1355,7 @@ function startGame(){
 }
 function waitHost(){G.state='story';$('story').hidden=false;$('story').onclick=null;$('storyTag').textContent='接続';$('storyText').textContent='ホストの潜入を待っています……';$('storyImg').hidden=true;}
 function startChapter(n){
- Snd.init();goFullscreen();
+ Snd.init();goFullscreen();mapSetup(Net.on&&!Net.host?WIDE:SAVE.mapMode==='wide');
  if(Net.on&&Net.host){Net.cid++;P2=P2||newPartner();P2.down=false;P2.bandUsed=false;P2.seen=false;}
  const cp=G.checkpoint&&G.checkpoint.ch===n?G.checkpoint:null;
  buildGrid();G.ch=n;
@@ -1339,7 +1366,7 @@ function startChapter(n){
  if(n===5){P=P||newPlayer();E=E||newEcho();Object.assign(G,{paused:false,redPulse:0,heartT:1,reported:false,tq:[],pending:[],flash:0,shake:0,freezeT:0});startShooter();return;}
  if(n>=2){grid[I(33,31)]=FLOOR;decals.push({t:'rubble',x:33,y:31});}
  if(n>=3)for(const g of gates)if(g.grp==='research'){g.open=true;g.anim=1;}
- buildMap(PS);buildMiniBase();placeDocs();
+ buildMap(psFor());buildMiniBase();placeDocs();
  Object.assign(G,{state:'play',paused:false,t:0,unlocked:false,subRise:0,escapeT:0,caughtT:0,shake:0,flash:0,redPulse:0,heartT:1,pending:[],tq:[],flick:0,blackout:0,reported:false,ev1:n>1,storyBg:false,spotted:false,spot:0,prints:[],breakoutFn:null});
  parts.length=0;P=newPlayer();[P.x,P.y]=CHAPTERS[n].spawn;
  if(n===1){E=newEcho(45.5,27.5);E.dormant=true;}
@@ -1351,7 +1378,7 @@ function startChapter(n){
  showScreen(null);clearRadio();$('roleTag').innerHTML=ICO[role.id]+' '+role.name;$('skillBtnLabel').textContent=role.skill||role.item;$('bSkill').hidden=!role.skill;
  updateTouchUI();Snd.setChase(false);
  chapterCard(n);netEv('card',n);
- schedule(1.5,()=>radio(RADIO[n]));
+ schedule(1.5,()=>radio(n===2&&WIDE?RADIO.w2:RADIO[n]));
  if(G.depth==null)G.depth=depth();
  if(n===1)schedule(14,()=>toast(isTouch?'右上の地図をタップすると全体図が見られる':'M キーで全体図が見られる'));
  if(G.depth>=1&&n===1)schedule(rand(28,45),ghostEyes);
@@ -1366,7 +1393,7 @@ function startChapter(n){
 function advanceChapter(n){
  G.ch=n;
  if(n===2){
-  chapterCard(2);netEv('card',2);G.spotted=false;schedule(1,()=>radio(RADIO[2]));
+  chapterCard(2);netEv('card',2);G.spotted=false;schedule(1,()=>radio(WIDE?RADIO.w2:RADIO[2]));
   G.breakoutFn=echoBreakout;if(0)schedule(8,()=>{
    G.blackout=1.5;G.flick=1;const [v,p]=spat(33.5,31.5,40);S.crash(Math.max(0.4,v),p);schedule(0.4,()=>S.screech());G.shake=12;
    grid[I(33,31)]=FLOOR;decals.push({t:'rubble',x:33,y:31});redrawArea(32,30,34,32);buildMiniBase();
@@ -1499,13 +1526,15 @@ let visPts=[];
 function computeVis(ox,oy,R){const N=160;visPts.length=0;for(let i=0;i<N;i++){const a=i/N*TAU+0.0007;const dx=Math.cos(a),dy=Math.sin(a);let d=rayDist(ox,oy,dx,dy,R);if(d<R)d=Math.min(R,d+0.42);visPts.push((ox+dx*d)*T,(oy+dy*d)*T);}}
 function visPath(c){c.beginPath();for(let i=0;i<visPts.length;i+=2){i?c.lineTo(visPts[i],visPts[i+1]):c.moveTo(visPts[i],visPts[i+1]);}c.closePath();}
 const LIGHTS=[];
-(function buildLights(){
+function buildLights(){LIGHTS.length=0;
+ if(WIDE)for(let x=6;x<48;x+=8)LIGHTS.push({x:x+0.5,y:43.2,r:2.1,col:'red',pulse:1,ph:x*0.25,a:0.5});
  for(let x=4;x<62;x+=7)LIGHTS.push({x:x+0.5,y:16.2,r:2.2,col:'red',pulse:1,ph:x*0.3,a:0.5});
  for(let x=14;x<48;x+=8)LIGHTS.push({x:x+0.5,y:32.2,r:2.1,col:'red',pulse:1,ph:x*0.2,a:0.5});
  LIGHTS.push({x:10.9,y:25,r:2.2,col:'red',pulse:1,ph:1});
- for(const r of ROOMS){if(r.dark||r.st==='corr')continue;LIGHTS.push({x:r.x+r.w/2,y:r.y+r.h/2,r:Math.min(2.8,Math.max(r.w,r.h)*0.42),col:r.st==='hangar'?'amber':'warm',flick:Math.random()<0.45,ph:Math.random()*10,a:0.4,zone:r.sec==='研究区画'?'research':r.sec==='機関区画'?'engine':null});}
+ for(const r of ROOMS){if(r.dark||r.st==='corr'||(r.wide&&!WIDE))continue;LIGHTS.push({x:r.x+r.w/2,y:r.y+r.h/2,r:Math.min(2.8,Math.max(r.w,r.h)*0.42),col:r.st==='hangar'?'amber':'warm',flick:Math.random()<0.45,ph:Math.random()*10,a:0.4,zone:r.sec==='研究区画'?'research':(r.sec==='機関区画'||r.sec==='下層区画')?'engine':null});}
  for(const f of FURN){if(f.t==='console')for(let i=0;i<f.w;i++)LIGHTS.push({x:f.x+i+0.5,y:f.y+0.4,r:1.1,col:(i+f.x)%3===0?'red':'cyan',a:0.5,small:true});if(f.t==='tank')LIGHTS.push({x:f.x+0.5,y:f.y+0.45,r:1.3,col:'green',a:0.6,small:true});if(f.t==='panel')LIGHTS.push({x:f.x+0.5,y:f.y+0.3,r:0.8,col:'green',a:0.5,small:true,flick:true,ph:f.x});if(f.t==='radar')LIGHTS.push({x:f.x+1.5,y:f.y+0.8,r:1.8,col:'green',a:0.45});}
-})();
+}
+buildLights();
 function zoneLit(L){if(L.zone==='research')return G.ch>=3;if(L.zone==='engine')return G.ch>=3||!!(G.breakers&&G.breakers.some(b=>b.on));return true;}
 function lightA(L){let a=(L.a||0.7)*(L.zone!==undefined?Math.min(2.2,D().lampK):1);if(L.pulse){a*=G.unlocked?(0.35+0.65*Math.max(0,Math.sin(G.t*6+L.ph))):(0.45+0.25*Math.sin(G.t*1.6+L.ph));}if(L.flick){const f=Math.sin(G.t*23+L.ph)*Math.sin(G.t*7.1+L.ph*2);if(f>0.7)a*=0.15;}if(G.flick>0.2&&Math.sin(G.t*31+L.ph*3)>1-G.flick*0.6)a*=0.2;if(G.blackout>0)a=0;if(L.zone&&!zoneLit(L))a*=0.15;return a;}
 function render(){
@@ -1801,6 +1830,7 @@ $('btnStart').onclick=()=>{Snd.init();S.click();buildRoles();showScreen('roles')
 $('btnArchive').onclick=()=>{Snd.init();S.click();buildArchive();showScreen('archive');};
 $('btnShop').onclick=()=>{Snd.init();S.click();buildShop();updateCredits();showScreen('shop');};
 $('btnGo').onclick=()=>startGame();
+$('mapC').onclick=()=>{SAVE.mapMode='compact';save();S.click();mapSelUI();};$('mapW').onclick=()=>{SAVE.mapMode='wide';save();S.click();mapSelUI();};
 document.querySelectorAll('.back').forEach(b=>b.onclick=()=>{S.click();showScreen('lobby');});
 $('resRetry').onclick=()=>{if(Net.on){if(G.lastWin)openCoop();else if(Net.host&&G.checkpoint)startChapter(G.checkpoint.ch);return;}if(!G.lastWin&&G.checkpoint){startChapter(G.checkpoint.ch);}else{buildRoles();showScreen('roles');}};
 $('btnCoop').onclick=()=>openCoop();$('btnSet').onclick=()=>openSettings();
@@ -1924,7 +1954,7 @@ function hostSnap(){
   e:E?[r2(E.x),r2(E.y),r2(E.ang),r2(E.spd),r2(E.eye),E.od?1:0,E.stunT>0?1:0,r2(E.climb),r2(E.crouch),(E.state==='chase'||E.lunge)?1:0,E.act?E.act.x:-1,E.act?E.act.y:-1,E.dormant?1:0]:null,
   sh:shutters.map(q=>q.broken?2:q.closed?1:0).join(''),g:gates.map(q=>q.open?1:0).join(''),br:(G.breakers||[]).map(b=>b.on?1:0).join(''),
   dk:docs.map(d=>d.got?1:0).join(''),dp:docs.map(d=>[d.x,d.y]),rb:decals.filter(d=>d.t==='rubble').map(d=>d.y*MW+d.x),
-  sub:r2(G.subRise),bo:r2(G.blackout||0),bh:G.bossHP==null?-1:G.bossHP,bd:G.bossDown?1:0,ct:r2(G.coreT||0),gd:P2&&P2.down?1:0,ev:Net.ev};
+  sub:r2(G.subRise),bo:r2(G.blackout||0),mm:WIDE?1:0,bh:G.bossHP==null?-1:G.bossHP,bd:G.bossDown?1:0,ct:r2(G.coreT||0),gd:P2&&P2.down?1:0,ev:Net.ev};
 }
 function netSend(force){
  if(!Net.on||!Net.room)return;
@@ -1971,13 +2001,13 @@ function hostApplyAct(a){
  }
 }
 function guestStartChapter(s){
- buildGrid();G.ch=s.ch;
+ mapSetup(!!s.mm);buildGrid();G.ch=s.ch;
  G.breakers=BREAKERS.map((b,i)=>({...b,on:s.br[i]==='1'}));
  gates.forEach((g,i)=>{g.open=s.g[i]==='1';g.anim=g.open?1:0;});
  for(const k of s.rb){const x=k%MW,y=(k-x)/MW;grid[k]=FLOOR;decals.push({t:'rubble',x,y});}
  shutters.forEach((q,i)=>{q.broken=s.sh[i]==='2';q.closed=s.sh[i]==='1';q.anim=q.closed?1:0;});
  G.docsRun=new Set();docs.forEach((d,i)=>{d.got=s.dk[i]==='1';d.x=s.dp[i][0];d.y=s.dp[i][1];if(d.got)G.docsRun.add(d.id);});
- buildMap(PS);buildMiniBase();
+ buildMap(psFor());buildMiniBase();
  Object.assign(G,{state:'play',paused:false,t:0,unlocked:s.g.split('').some((c,i)=>c==='1'&&gates[i].grp==='hangar'),subRise:s.sub,escapeT:0,caughtT:0,shake:0,flash:0,redPulse:0,heartT:1,pending:[],tq:[],flick:0,blackout:0,reported:false,spotted:false,prints:[]});
  parts.length=0;P=newPlayer();const hp=Net.snapHostP||[CHAPTERS[s.ch].spawn[0],CHAPTERS[s.ch].spawn[1]];P.x=hp[0];P.y=hp[1];
  E=s.e?newEcho(s.e[0],s.e[1]):newEcho();E.dormant=s.e?!!s.e[12]:false;
@@ -2356,12 +2386,12 @@ function pickUp(it){const k=it.k;G.pickups=G.pickups.filter(q=>q!==it);S.paper()
  else{G.bag[k]=(G.bag[k]||0)+(k==='dart'?4:1);G.bag.sel=k;toast(`${ITEMS[k][0]}を手に入れた`);}
 }
 // ---- cameras (depth>=1) & crawlers (depth>=2) ----
-const CAMS=[[8,15,1],[23,15,1],[44,15,1],[29,18,-1],[14,31,1],[40,31,1]];
+const CAMS=[[8,15,1],[23,15,1],[44,15,1],[29,18,-1],[14,31,1],[40,31,1]];const CAMS_W=[[12,42,1],[34,42,1],[25,45,-1]];
 function setupHazards(n){
  const d=G.depth||0;G.cams=[];G.crawl=[];G.traps=[];G.decoys=[];G.halo=null;
  if(d>=1)G.halo={x:P.x-0.8,y:P.y,cd:n>=3?0:20,ph:0,warnT:0,dash:null};
  if(Net.on)return;
- if(d>=1){const nc=Math.min(CAMS.length,2+d);for(let i=0;i<nc;i++){const [x,y,dir]=CAMS[i];G.cams.push({x,y,dir,base:(dir>0?Math.PI/2:-Math.PI/2)+(i%2?1:-1)*dir*1.0,a:0,ph:Math.random()*6,off:0,cool:0});}}
+ if(d>=1){const nc=Math.min(CAMS.length,2+d);const list=CAMS.slice(0,nc).concat(WIDE?CAMS_W:[]);for(let i=0;i<list.length;i++){const [x,y,dir]=list[i];G.cams.push({x,y,dir,base:(dir>0?Math.PI/2:-Math.PI/2)+(i%2?1:-1)*dir*1.0,a:0,ph:Math.random()*6,off:0,cool:0});}}
  if(d>=2&&n>=2){const nn=d>=3?4:2;for(let i=0;i<nn;i++){const pos=spawnEchoAway(10,30);if(pos)G.crawl.push({x:pos[0],y:pos[1],a:0,stun:0,path:null,pi:0,rp:0,ph:Math.random()*6,chase:false,hitCD:0});}}
 }
 function camSees(c){
@@ -2445,9 +2475,9 @@ function zoneTile(secs){for(let k=0;k<80;k++){const r=ROOMS[Math.floor(Math.rand
 function newGuard(type,pos,secs){const route=[pos];for(let i=0;i<3;i++){const q=zoneTile(secs);if(q)route.push(q);}return {type,x:pos[0],y:pos[1],a:rand(0,TAU),route,ri:1,state:'patrol',sus:0,hp:GT[type].hp,wait:rand(0,2),path:null,pi:0,rp:0,fireT:1,seen:false,sleep:0,look:0,ph:rand(0,6),secs};}
 function setupGuards(n){
  G.guards=[];G.bullets=[];G.darts=[];G.phase='normal';G.phaseT=0;G.lastSeenT=99;G.alertPos=null;G.reinf=0;
- if(Net.on||n>=5)return;const d=G.depth||0,secs=CH_ZONE[n]||CH_ZONE[3];
+ if(Net.on||n>=5)return;const d=G.depth||0,secs=(WIDE&&n===2)?['機関区画','下層区画']:(CH_ZONE[n]||CH_ZONE[3]);
  const list={1:['guard','guard','guard'],2:['guard','guard','guard','drone'],3:['guard','guard','heavy','drone','guard'],4:['drone']}[n]||[];
- for(let i=0;i<d;i++)list.push(i%2?'drone':'guard');
+ for(let i=0;i<d;i++)list.push(i%2?'drone':'guard');if(WIDE&&(n===2||n===3))list.push('guard','heavy');
  for(const t of list){const p=zoneTile(secs);if(p)G.guards.push(newGuard(t,p,secs));}
 }
 function playerVisible(){return P&&P.alive&&!P.hidden&&!P.vent&&!P.locker&&!(P.camo>0)&&!P.downed;}
