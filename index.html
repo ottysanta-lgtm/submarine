@@ -172,7 +172,7 @@ h1.title span{color:var(--red);}
 #rotate .rot{font-size:54px;animation:rot 1.8s ease-in-out infinite;}
 @keyframes rot{0%,20%{transform:rotate(0)}50%,80%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
 #rotate p{margin:0;font-size:18px;}#rotate b{color:var(--red);}#rotate small{color:var(--dim);}
-@media (max-height:460px){#radio{font-size:12px;max-width:52vw;left:48%;}}
+@media (max-height:460px){#radio{font-size:12px;max-width:44vw;left:36%;}}
 
 .coopNote{font-size:13px;line-height:1.8;color:var(--dim);margin:0 0 14px;}.coopNote b{color:var(--ink);font-weight:700;}
 .coopBox{background:#11161a;border:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;max-width:520px;}
@@ -229,6 +229,15 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
 #result{overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;justify-content:flex-start!important;}
 #result>#resTitle{margin-top:auto;}#result>.row{margin-bottom:auto;padding-bottom:10px;}
 @media (max-height:500px){#resTitle{font-size:40px!important;}#resSub{margin:2px 0 8px;}.stats{margin-bottom:8px;}.stats div{padding:6px 8px;}.stats b{font-size:16px;}#resHint,#resTease{font-size:12px;line-height:1.6;margin-bottom:8px;}#resBadges{margin:0 0 4px;font-size:12px;}.row .bigbtn{padding:11px 20px;}}
+
+#itemTag{font-size:11.5px;color:var(--ink);text-shadow:0 1px 3px #000;letter-spacing:.02em;}
+.upgGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;}
+#touch{grid-template-columns:auto auto auto!important;}
+#bAct{grid-column:3!important;}#bRun{grid-column:2!important;}#bSkill{grid-column:2!important;}
+#bItem{width:64px;height:64px;grid-column:1;grid-row:2;font-size:13px;border-color:rgba(90,230,255,.6);}
+#bItem small{font-size:9px;color:var(--dim);font-weight:700;}#bItem.dim{opacity:.4;}
+#bSel{width:40px;height:40px;grid-column:1;grid-row:1;justify-self:center;align-self:end;font-size:16px;}
+@media (max-height:460px){.menu{gap:6px;}.mbtn{padding:8px 14px;font-size:14px;}}
 /* result */
 #result{align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at center,#131a1e,#05070a 70%);}
 #result.lose{background:radial-gradient(ellipse at center,#2a0806,#050303 70%);}
@@ -265,7 +274,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
 <canvas id="game"></canvas>
 
 <div id="hud" hidden>
- <div class="hl"><div id="roleTag"></div><div id="stam"><div id="stamFill"></div></div><div id="skillTag"></div><div id="rank"></div></div>
+ <div class="hl"><div id="roleTag"></div><div id="stam"><div id="stamFill"></div></div><div id="skillTag"></div><div id="itemTag"></div><div id="rank"></div></div>
  <div id="objective"></div><div id="roomName"></div>
  <div class="hr"><canvas id="mini" aria-label="ミニマップ"></canvas><div class="hbtns"><button id="pauseBtn" aria-label="一時停止">II</button><button id="fsBtn" aria-label="全画面">⛶</button></div></div>
  <div id="prompt"></div>
@@ -277,6 +286,8 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
 <div id="stickZone" hidden></div>
 <div id="stickBase"><div id="stickKnob"></div></div>
 <div id="touch" hidden>
+ <button class="tb" id="bSel" aria-label="アイテム切替">⇄</button>
+ <button class="tb" id="bItem"><span id="itemLabel">⚡×0</span><small>アイテム</small></button>
  <button class="tb" id="bSkill"><span id="skillBtnLabel">スキル</span><span id="skillCnt"></span></button>
  <button class="tb" id="bAct"><span id="actLabel">調べる</span></button>
  <button class="tb" id="bRun">走る</button>
@@ -294,10 +305,11 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn primary" id="btnStart">出撃する <small>DEPLOY</small></button>
    <button class="mbtn" id="btnCoop">オンライン協力 <small>CO-OP 2P</small></button>
    <button class="mbtn" id="btnArchive">アーカイブ <small>ARCHIVE</small></button>
+   <button class="mbtn" id="btnUpg">強化 <small>UPGRADE</small></button>
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 1.5（脱出シューティング追加）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 1.6（強化・アイテム・HALO・新しい敵）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -332,6 +344,11 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
  <div class="scroll"><div id="badgeList"></div><div id="arcList"></div></div>
 </section>
 
+<section id="upg" class="screen" hidden>
+ <div class="head"><h2><small>UPGRADE</small>装備の強化</h2><div style="display:flex;gap:8px;align-items:center"><div class="chip">CREDIT <b class="credits">0</b></div><button class="back">戻る</button></div></div>
+ <p id="upgInfo" style="margin:0 0 4px;font-size:12px;color:var(--amber)"></p><p id="upgNext" style="margin:0 0 10px;font-size:12px;color:var(--dim)"></p>
+ <div class="scroll"><div id="upgList" class="upgGrid"></div></div>
+</section>
 <section id="shop" class="screen" hidden>
  <div class="head"><h2><small>CREDIT SHOP</small>クレジットショップ</h2><div style="display:flex;gap:8px;align-items:center"><div class="chip">CREDIT <b class="credits">0</b></div><button class="back">戻る</button></div></div>
  <p style="margin:0 0 10px;font-size:12px;color:var(--dim)">見た目だけが変わるアイテム。資料を集めて脱出するとクレジットが貯まる。</p>
@@ -837,6 +854,7 @@ addEventListener('keydown',e=>{
  else if(G.state==='play'&&!G.paused){
   if(e.code==='KeyE'||e.code==='Space'||e.code==='Enter'){e.preventDefault();doAction();}
   if(e.code==='KeyQ'||e.code==='KeyF')useSkill();
+  if(e.code==='KeyR')useItem();if(e.code==='KeyC')selItem();
   if(e.code==='KeyM'||e.code==='Tab'){e.preventDefault();toggleBigMap();}
   if(e.code==='Escape'||e.code==='KeyP')pauseGame();
  }else if(G.state==='doc'&&(e.code==='Escape'||e.code==='KeyE'||e.code==='Space'||e.code==='Enter')){e.preventDefault();closeDoc();}
@@ -853,7 +871,7 @@ stickZone.addEventListener('pointerup',joyEnd);stickZone.addEventListener('point
 function bindBtn(id,down,up){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();Snd.init();el.classList.add('down');down&&down();try{el.setPointerCapture(e.pointerId);}catch(_){}});const u=()=>{el.classList.remove('down');up&&up();};el.addEventListener('pointerup',u);el.addEventListener('pointercancel',u);el.addEventListener('contextmenu',e=>e.preventDefault());}
 bindBtn('bRun',()=>runHeld=true,()=>runHeld=false);
 bindBtn('bAct',()=>doAction());
-bindBtn('bSkill',()=>useSkill());
+bindBtn('bSkill',()=>useSkill());bindBtn('bItem',()=>useItem());bindBtn('bSel',()=>selItem());
 document.addEventListener('touchmove',e=>{if(!e.target.closest('.scroll,.doc,#result'))e.preventDefault();},{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 
@@ -1000,7 +1018,7 @@ function checkCatch(r=0.75){
 function catchPlayer(pl=P){if(pl===P)G.everCaught=true;
  if(pl!==P){catchPartner();return;}
  {
-  if(P.bandage>0){P.bandage--;P.inv=3;E.stunT=2.2;P.downT=1.4;G.flash=0.6;G.shake=12;S.stinger();sparks(P.x,P.y,10,5);toast('包帯を使って立ち上がった');const a=Math.atan2(P.y-E.y,P.x-E.x);pushPlayer(Math.cos(a)*1.2,Math.sin(a)*1.2);return;}
+  if(P.bandage>0){P.bandage--;if(G.kits>0)G.kits--;P.inv=3;E.stunT=2.2;P.downT=1.4;G.flash=0.6;G.shake=12;S.stinger();sparks(P.x,P.y,10,5);toast('包帯を使って立ち上がった');const a=Math.atan2(P.y-E.y,P.x-E.x);pushPlayer(Math.cos(a)*1.2,Math.sin(a)*1.2);return;}
   if(Net.on&&P2&&P2.here&&!P2.down){P.downed=true;P.vx=P.vy=0;E.stunT=1.8;G.flash=0.7;G.shake=14;S.stinger();spotFlash(0.5);toast('捕まった！ 相棒に助けてもらえ');return;}
   caught();
  }
@@ -1057,9 +1075,9 @@ function updatePlayer(dt){
  const inf=P.buffT>0;
  if(P.stam<=0){P.stamLock=true;}if(P.stamLock&&P.stam>35)P.stamLock=false;
  P.sprint=wantRun&&!P.stamLock&&P.stam>0;
- if(P.sprint){if(!inf)P.stam=Math.max(0,P.stam-24*dt);P.stamDelay=0.8;}
+ if(P.sprint){if(!inf)P.stam=Math.max(0,P.stam-24/(1+0.25*upLv('stam'))*dt);P.stamDelay=0.8;}
  else{P.stamDelay-=dt;if(P.stamDelay<=0)P.stam=Math.min(100,P.stam+17*dt);}
- const vmax=(P.sprint?4.7:3.1)*Math.min(1,mag*1.15);
+ const vmax=(P.sprint?4.7:3.1)*(1+0.06*upLv('speed'))*Math.min(1,mag*1.15);
  const tvx=mag?ix/mag*vmax:0,tvy=mag?iy/mag*vmax:0;
  const k=Math.min(1,dt*14);P.vx+=(tvx-P.vx)*k;P.vy+=(tvy-P.vy)*k;
  moveP(P.vx*dt,P.vy*dt,false);
@@ -1082,6 +1100,7 @@ function nearestInteract(){
   if(s.broken){if(role.id==='mech')cand({type:'repair',s,label:'シャッターを修理'},d,1);else cand({type:'brokenInfo',s,label:'壊れたシャッター'},d,0);}
   else cand({type:'shut',s,label:s.closed?'シャッターを開ける':'シャッターを閉める'},d,1);}
  for(const g of gates){const d=Math.hypot(g.x+0.5-P.x,g.y+0.5-P.y);if(!g.open&&d<1.4)cand({type:'gate',g,label:g.grp==='hangar'?'格納庫は封鎖されている':'隔壁は電源が落ちている'},d,0);}
+ for(const it of G.pickups||[])cand({type:'pick',it,label:`${it.k==='kit'?'救急キット':ITEMS[it.k][0]}を拾う`},Math.hypot(it.x+0.5-P.x,it.y+0.5-P.y),2.8);
  for(const L of LOCKERS)cand({type:'hide',L,label:'ロッカーに隠れる'},Math.hypot(L.x+0.5-P.x,L.y+0.5-P.y),2.5);
  if(G.ch===2)for(const b of G.breakers)if(!b.on)cand({type:'breaker',b,label:'配電盤を起動する'},Math.hypot(b.x+0.5-P.x,b.y+0.5-P.y),3);
  return best;
@@ -1092,6 +1111,7 @@ function doAction(){
  if(G.state!=='play'||G.paused)return;const it=nearestInteract();if(!it){return;}
  switch(it.type){
   case 'doc':vib(25,'doc');openDoc(it.d,true);break;
+  case 'pick':pickUp(it.it);break;
   case 'vent':{if(E&&E.state==='chase')badge('vent');P.vent={ph:'in',t:0,a:it.a,b:it.b,dur:Math.max(0.9,Math.hypot(it.a[0]-it.b[0],it.a[1]-it.b[1])*0.08)};P.x=it.a[0]+0.5;P.y=it.a[1]+0.5;P.vx=P.vy=0;S.vent();if(E&&(E.state==='chase'))toast('通気口に逃げ込んだ。ECHO-01は追ってこない');break;}
   case 'zip':{const dur=Math.hypot(it.a[0]-it.b[0],it.a[1]-it.b[1])/11+0.3;P.zip={a:it.a,b:it.b,t:0,dur};P.x=it.a[0]+0.5;P.y=it.a[1]+0.5;S.zip(dur);break;}
   case 'shut':{const s=it.s;if(!s.closed){const ex=Math.floor(E.x),ey=Math.floor(E.y);if(Math.hypot(P.x-(s.x+0.5),P.y-(s.y+0.5))<0.55||(ex===s.x&&ey===s.y)){S.deny();toast('シャッターの下に何かがある');return;}}
@@ -1174,7 +1194,7 @@ function finish(win,ending){
 }
 
 // ================= UI =================
-function showScreen(id){setTimeout(checkRotate,0);for(const s of ['lobby','roles','result','archive','shop','coop'])$(s).hidden=s!==id;const inGame=id===null;$('hud').hidden=!inGame;G.screen=id;updateTouchUI();}
+function showScreen(id){setTimeout(checkRotate,0);for(const s of ['lobby','roles','result','archive','shop','coop','upg'])$(s).hidden=s!==id;const inGame=id===null;$('hud').hidden=!inGame;G.screen=id;updateTouchUI();}
 function updateTouchUI(){const play=G.state==='play'||G.state==='doc'||G.state==='shoot';$('touch').hidden=!(isTouch&&play&&!G.paused);$('stickZone').hidden=!(isTouch&&(G.state==='play'||G.state==='shoot')&&!G.paused);$('kbHelp').hidden=isTouch;}
 function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),2200);}
 function banner(t,s){netEv('banner',t,s);$('bannerT').textContent=t;$('bannerS').textContent=s||'';const b=$('banner');b.classList.remove('show');void b.offsetWidth;b.classList.add('show');clearTimeout(banner._t);banner._t=setTimeout(()=>b.classList.remove('show'),4200);}
@@ -1268,11 +1288,11 @@ function spawnEchoAway(minD,maxD){
  for(let k=0;k<500;k++){const x=Math.floor(rand(1,MW-1)),y=Math.floor(rand(1,MH-1));if(tile(x,y)!==FLOOR)continue;const d=Math.hypot(x+0.5-P.x,y+0.5-P.y);if(d<minD||d>maxD)continue;if(los(P.x,P.y,x+0.5,y+0.5))continue;if(!findPath(x+0.5,y+0.5,P.x,P.y,false))continue;return [x+0.5,y+0.5];}
  return null;
 }
-function saveCheckpoint(){G.checkpoint={ch:G.ch,docs:[...G.docsRun],breakers:(G.breakers||[]).map(b=>b.on),runT:G.runT};}
+function saveCheckpoint(){G.checkpoint={ch:G.ch,docs:[...G.docsRun],breakers:(G.breakers||[]).map(b=>b.on),runT:G.runT,bag:{...(G.bag||newBag())},kits:G.kits||0};}
 function startGame(){
  Snd.init();S.click();goFullscreen();badge('first');G.everCaught=false;G.runBadges=[];
  for(const d of docs){d.got=false;d.firstTime=false;}
- Object.assign(G,{runT:0,docsRun:new Set(),checkpoint:null,reported:false,shooting:false});
+ Object.assign(G,{runT:0,docsRun:new Set(),checkpoint:null,reported:false,shooting:false,kits:0});G.bag=newBag();
  G.depth=depth();const pro=PROLOGUE.slice();
  if(G.depth>=1)pro.splice(3,0,['二度目の潜入','前回の調査で、ECHO-01は回収できなかった。\n本部は、再びあなたを送り込んだ。']);
  if(G.depth>=2)pro.splice(pro.length-1,0,['潜航深度 '+G.depth,'潜るたびに、艦内の音が近くなっている気がする。\n……あれは、あなたを覚えているのかもしれない。']);
@@ -1287,7 +1307,8 @@ function startChapter(n){
  const cp=G.checkpoint&&G.checkpoint.ch===n?G.checkpoint:null;
  buildGrid();G.ch=n;
  G.breakers=BREAKERS.map((b,i)=>({...b,on:n>=3||(cp?!!cp.breakers[i]:false)}));
- if(cp){G.docsRun=new Set(cp.docs);G.runT=cp.runT;for(const d of docs)d.got=G.docsRun.has(d.id);}
+ if(cp){G.docsRun=new Set(cp.docs);G.runT=cp.runT;for(const d of docs)d.got=G.docsRun.has(d.id);if(cp.bag){G.bag={...cp.bag};G.kits=cp.kits||0;}}
+ if(!G.bag)G.bag=newBag();
  $('bRun').textContent='走る';G.shooting=false;
  if(n===5){P=P||newPlayer();E=E||newEcho();Object.assign(G,{paused:false,redPulse:0,heartT:1,reported:false,tq:[],pending:[],flash:0,shake:0,freezeT:0});startShooter();return;}
  if(n>=2){grid[I(33,31)]=FLOOR;decals.push({t:'rubble',x:33,y:31});}
@@ -1299,6 +1320,7 @@ function startChapter(n){
  else if(n===2){E=newEcho(33.5,29.5);E.idleT=2;E.lungeCD=12;}
  else if(n===3){E=newEcho(18.5,24.5);E.idleT=1;}
  else{for(const g of gates)if(g.grp==='hangar'){g.open=true;g.anim=1;}G.unlocked=true;G.subRise=1;const pos=spawnEchoAway(11,17)||spawnEchoAway(7,12)||[38.5,28.5];E=newEcho(pos[0],pos[1]);E.idleT=99;schedule(4.5,()=>{E.last=[P.x,P.y];setEchoState('search');E.searchT=8;E.huntT=10;});}
+ P.bandage=(P.bandage||0)+(G.kits||0);setupHazards(n);spawnPickups(n);
  cam.x=P.x*T-VW/2;cam.y=P.y*T-VH/2;
  showScreen(null);clearRadio();$('roleTag').textContent=`${role.icon} ${role.name}`;$('skillBtnLabel').textContent=role.skill||role.item;$('bSkill').hidden=!role.skill;
  updateTouchUI();Snd.setChase(false);
@@ -1307,6 +1329,8 @@ function startChapter(n){
  if(G.depth==null)G.depth=depth();
  if(n===1)schedule(14,()=>toast(isTouch?'右上の地図をタップすると全体図が見られる':'M キーで全体図が見られる'));
  if(G.depth>=1&&n===1)schedule(rand(28,45),ghostEyes);
+ if(G.depth>=1&&n===1){schedule(6,()=>radio('今回は小型ドローン《HALO》を同行させる。ECHO-01が近づくと方向を教えてくれる。'));schedule(13,()=>radio('艦の警備システムが再起動している。監視カメラの赤い光に入るな。'));}
+ if(G.depth>=2&&n===2)schedule(16,()=>radio('ECHO-01の子機が動いている。小さいが、触れると転ばされるぞ。'));
  if(G.depth>=1&&n===3)schedule(rand(20,35),ghostEyes);
  if(G.depth>=2&&(n===2||n===3)){schedule(rand(30,50),()=>{S.staticBurst();radio(['……だれか……いるの……？','……ここ……くらい……','……いかないで……'][Math.floor(Math.random()*3)],'不明');});}
  if(G.depth>=3&&n===1)schedule(rand(60,80),poundEvent);
@@ -1425,7 +1449,7 @@ function update(dt){
  for(const g of gates)g.anim=lerp(g.anim,g.open?1:0,Math.min(1,dt*2.5));
  if(G.state==='play'){
   G.runT+=dt;
-  if(G.freezeT>0){G.freezeT-=dt;}else if(Net.on&&!Net.host)guestUpdate(dt);else{updatePlayer(dt);updateEcho(dt);if(Net.on&&P.downed&&!(P2&&P2.here&&!P2.down))caught();}
+  if(G.freezeT>0){G.freezeT-=dt;}else if(Net.on&&!Net.host)guestUpdate(dt);else{updatePlayer(dt);updateEcho(dt);updateExtras(dt);if(Net.on&&P.downed&&!(P2&&P2.here&&!P2.down))caught();}
   partnerTick(dt);
   if(P.locker&&G.lockChase&&E&&E.state!=='chase'&&!E.rip){G.lockChase=false;badge('locker');}
   const chasing=E.state==='chase'||!!E.lunge;Snd.setChase(chasing||G.unlocked&&E.state==='search');
@@ -1487,7 +1511,7 @@ function render(){
  // shutters & gates
  for(const s of shutters)if(inView(s.x,s.y))drawShutter(s);
  for(const g of gates)if(inView(g.x,g.y))drawGate(g);
- drawPrints(inView);
+ drawPrints(inView);drawExtras(inView);
  for(const b of (G.breakers||[])){if(!inView(b.x,b.y))continue;ctx.fillStyle=b.on?'#50d080':'#ff4030';ctx.beginPath();ctx.arc((b.x+0.5)*T,(b.y+0.25)*T,4,0,TAU);ctx.fill();ctx.fillStyle=b.on?'#8a8f86':'#4a4e46';ctx.save();ctx.translate((b.x+0.5)*T,(b.y+0.5)*T);ctx.rotate(b.on?-0.6:0.6);ctx.fillRect(-2,-12,4,12);ctx.restore();}
  // docs
  for(const d of docs)if(!d.got&&inView(d.x,d.y))drawDocItem(d);
@@ -1508,15 +1532,16 @@ function render(){
  fctx.globalCompositeOperation='destination-out';fctx.setTransform(FS,0,0,FS,-cx*FS,-cy*FS);
  for(const L of LIGHTS){if(!inView(L.x,L.y,L.r+1))continue;const rr=roomAt(L.x,L.y);if(rr&&rr.dark)continue;glow(fctx,'white',L.x*T,L.y*T,L.r*T,lightA(L)*(L.small?0.8:0.9));}
  if(P.alive&&G.state!=='escape'){
-  const R=nv?9:Math.max(8.2,DD.flash+0.6);const ox=P.x,oy=P.y;computeVis(ox,oy,R);
+  const R=nv?9:Math.max(8.2,DD.flash+0.6+upLv('light'));const ox=P.x,oy=P.y;computeVis(ox,oy,R);
   let fl=1;if(Math.random()<G.flick*0.4)fl=rand(0.1,0.8);if(darkRoom&&Math.random()<0.03)fl*=0.5;if(G.blackout>0)fl=0;if(P.locker)fl=0.35;
   fctx.save();visPath(fctx);fctx.clip();
-  const hx=(P.x+Math.cos(P.face)*0.3)*T,hy=(P.y+Math.sin(P.face)*0.3)*T,L=(darkRoom?DD.flash-1.4:DD.flash)*T;
+  const hx=(P.x+Math.cos(P.face)*0.3)*T,hy=(P.y+Math.sin(P.face)*0.3)*T,L=((darkRoom?DD.flash-1.4:DD.flash)+upLv('light'))*T;
   if(nv){fctx.globalAlpha=0.9;glow(fctx,'white',P.x*T,P.y*T,R*T*1.1,1);}
   else{const g=fctx.createRadialGradient(hx,hy,6,hx,hy,L);g.addColorStop(0,`rgba(0,0,0,${fl})`);g.addColorStop(0.5,`rgba(0,0,0,${0.75*fl})`);g.addColorStop(1,'rgba(0,0,0,0)');fctx.fillStyle=g;fctx.globalAlpha=1;fctx.beginPath();fctx.moveTo(hx,hy);fctx.arc(hx,hy,L,P.face-0.52,P.face+0.52);fctx.closePath();fctx.fill();glow(fctx,'white',P.x*T,P.y*T,T*1.9,0.85*fl);}
   fctx.restore();
  }
  if(Net.on&&P2&&P2.here&&!P2.hidden&&!P2.vent&&!(P2.down||P2.downed)&&G.state!=='escape'){const sv=visPts;visPts=[];computeVis(P2.x,P2.y,8);fctx.save();visPath(fctx);fctx.clip();const hx=(P2.x+Math.cos(P2.face)*0.3)*T,hy=(P2.y+Math.sin(P2.face)*0.3)*T,L2=DD.flash*T*0.95;const g2=fctx.createRadialGradient(hx,hy,6,hx,hy,L2);g2.addColorStop(0,'rgba(0,0,0,.9)');g2.addColorStop(1,'rgba(0,0,0,0)');fctx.fillStyle=g2;fctx.globalAlpha=1;fctx.beginPath();fctx.moveTo(hx,hy);fctx.arc(hx,hy,L2,P2.face-0.5,P2.face+0.5);fctx.closePath();fctx.fill();glow(fctx,'white',P2.x*T,P2.y*T,T*1.5,0.7);fctx.restore();visPts=sv;}
+ if(G.halo)glow(fctx,'white',G.halo.x*T,G.halo.y*T,T*1.7,0.65);
  for(const d of docs)if(!d.got&&(role.id==='scout'||Math.hypot(d.x-P.x,d.y-P.y)<3))glow(fctx,'white',(d.x+0.5)*T,(d.y+0.5)*T,T*0.8,0.5);
  if(G.unlocked&&inView(DOCK.x,DOCK.y,6))glow(fctx,'white',(DOCK.x+DOCK.w/2)*T,(DOCK.y+DOCK.h/2)*T,T*3.2,0.7);
  fctx.globalAlpha=1;
@@ -1727,7 +1752,7 @@ function updateHUD(dt){
  let sk='';
  if(role.id==='agent')sk=`弾 ${P.shells}`;else if(role.id==='medic')sk=`包帯 ×${P.bandage}`;else if(role.id==='mech')sk='ペンチ';else sk=P.skillCD>0?`${role.skill} ${Math.ceil(P.skillCD)}秒`:`${role.skill} 使用可`;
  if(P.buffT>0)sk=`スタミナ無限 ${Math.ceil(P.buffT)}秒`;if(P.nvT>0)sk=`暗視 ${Math.ceil(P.nvT)}秒`;
- setT('skillTag',sk);setT('skillCnt',role.id==='agent'?String(P.shells):P.skillCD>0?String(Math.ceil(P.skillCD)):'');
+ setT('skillTag',sk);{const b=G.bag||{};setT('itemTag',`⚡${b.flash||0}　🪤${b.trap||0}　📢${b.decoy||0}　✚${(P.bandage||0)}`+(G.halo?`　🛸HALO${G.halo.cd>0?' '+Math.ceil(G.halo.cd)+'秒':' 待機'}`:''));const sel=b.sel||'flash';setT('itemLabel',`${ITEMS[sel][1]}×${b[sel]||0}`);$('bItem').classList.toggle('dim',!bagCount());}setT('skillCnt',role.id==='agent'?String(P.shells):P.skillCD>0?String(Math.ceil(P.skillCD)):'');
  const it=nearestInteract();const lbl=it?it.label:'';setT('actLabel',lbl||'調べる');$('bAct').classList.toggle('dim',!it);
  setT('prompt',it?`E　${lbl}`:'');$('prompt').classList.toggle('show',!!it&&!isTouch);
  const rm=roomAt(P.x,P.y);setT('roomName',rm?(rm.sec?`${rm.sec}　${rm.name}`:rm.name):'');
@@ -1746,7 +1771,7 @@ $('btnShop').onclick=()=>{Snd.init();S.click();buildShop();updateCredits();showS
 $('btnGo').onclick=()=>startGame();
 document.querySelectorAll('.back').forEach(b=>b.onclick=()=>{S.click();showScreen('lobby');});
 $('resRetry').onclick=()=>{if(Net.on){if(G.lastWin)openCoop();else if(Net.host&&G.checkpoint)startChapter(G.checkpoint.ch);return;}if(!G.lastWin&&G.checkpoint){startChapter(G.checkpoint.ch);}else{buildRoles();showScreen('roles');}};
-$('btnCoop').onclick=()=>openCoop();$('coopCreate').onclick=()=>coopCreate();$('coopEnter').onclick=()=>coopEnter();$('coopGo').onclick=()=>{if(Net.on&&Net.host)startGame();};$('coopBack').onclick=()=>{netLeave();S.click();showScreen('lobby');};
+$('btnCoop').onclick=()=>openCoop();$('btnUpg').onclick=()=>{Snd.init();S.click();buildUpg();updateCredits();showScreen('upg');};$('coopCreate').onclick=()=>coopCreate();$('coopEnter').onclick=()=>coopEnter();$('coopGo').onclick=()=>{if(Net.on&&Net.host)startGame();};$('coopBack').onclick=()=>{netLeave();S.click();showScreen('lobby');};
 $('resLobby').onclick=()=>toLobby();
 $('pauseBtn').onclick=()=>pauseGame();
 $('resumeBtn').onclick=()=>resumeGame();
@@ -2035,7 +2060,7 @@ function teaser(win,ending){
  const n=G.docsRun?G.docsRun.size:0,got=(SAVE.badges||[]).length;const t=[];
  if(!(SAVE.endings||[]).includes('true'))t.push(n<7?`真エンディングには資料があと ${7-n} つ足りない`:'資料は足りている。あとは、正しい答えを見つけるだけ');
  const d=Math.min(3,SAVE.escapes||0);if(d<3)t.push(`次の潜航深度 ${d+1}：${DEPTH_TXT[d+1]}`);
- t.push(`バッジ ${got} / ${BADGES.length}　まだ見つけていないバッジがある`);
+ t.push(`バッジ ${got} / ${BADGES.length}　まだ見つけていないバッジがある`);t.push('ロビーの「強化」で装備をパワーアップできる');
  return t.join('\n');
 }
 function goFS(){
@@ -2065,7 +2090,7 @@ function startShooter(){
  showScreen(null);$('hud').hidden=true;$('story').hidden=true;clearRadio();
  $('actLabel').textContent='閃光弾';$('skillBtnLabel').textContent='';$('bSkill').hidden=true;$('bRun').textContent='ブースト';
  const dp=G.depth||0;
- Object.assign(SH,{t:0,dist:0,total:13500,spd:190,x:VW*0.42,y:VH*0.5,vx:0,vy:0,hull:5,inv:1.5,flash:3,fireT:0,boost:100,boostOn:false,
+ Object.assign(SH,{t:0,dist:0,total:13500,spd:190,x:VW*0.42,y:VH*0.5,vx:0,vy:0,hull:5+upLv('hull'),maxHull:5+upLv('hull'),inv:1.5,flash:3,fireT:0,boost:100,boostOn:false,
   echo:-VW*0.25,echoV:22+dp*4,echoStun:0,lunge:null,lungeT:6,torps:[],foes:[],shots:[],fx:[],bub:[],pick:[],spawnT:1.5,shake:0,win:0,flashFx:0,hitFx:0,dp,prop:0,warn:0,msgT:0,msg:''});
  for(let i=0;i<60;i++)SH.bub.push({x:Math.random()*VW,y:Math.random()*VH,r:rand(1,3),s:rand(20,60)});
  Snd.setChase(true);S.subEngine();S.screech();
@@ -2138,7 +2163,7 @@ function updateShoot(dt){
  SH.foes=SH.foes.filter(f=>!f.dead&&f.x>-60&&f.y>-60&&f.y<VH+60);
  for(const b of SH.shots){b.x+=b.vx*dt;b.y+=b.vy*dt;if(Math.hypot(b.x-SH.x,b.y-SH.y)<16){b.dead=true;shHit(1);}}
  SH.shots=SH.shots.filter(b=>!b.dead&&b.x>-20&&b.x<VW+20&&b.y>-20&&b.y<VH+20);
- for(const p of SH.pick){p.x-=spd*0.4*dt;p.y+=Math.sin(SH.t*3+p.x)*10*dt;if(Math.hypot(p.x-SH.x,p.y-SH.y)<26){p.dead=true;if(p.k==='flash'){SH.flash=Math.min(5,SH.flash+1);shMsg('閃光弾 +1',1.2);}else{SH.hull=Math.min(5,SH.hull+1);shMsg('船体を修理 +1',1.2);}S.paper();vib(30);}}
+ for(const p of SH.pick){p.x-=spd*0.4*dt;p.y+=Math.sin(SH.t*3+p.x)*10*dt;if(Math.hypot(p.x-SH.x,p.y-SH.y)<26){p.dead=true;if(p.k==='flash'){SH.flash=Math.min(5,SH.flash+1);shMsg('閃光弾 +1',1.2);}else{SH.hull=Math.min(SH.maxHull,SH.hull+1);shMsg('船体を修理 +1',1.2);}S.paper();vib(30);}}
  SH.pick=SH.pick.filter(p=>!p.dead&&p.x>-30);
  for(const e of SH.fx){e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=0.94;e.vy*=0.94;e.l-=dt;}SH.fx=SH.fx.filter(e=>e.l>0);
  for(const b of SH.bub){b.x-=(spd*0.5+b.s)*dt;b.y-=b.s*0.5*dt;if(b.life!=null)b.life-=dt;if(b.x<-10||b.y<-10){if(b.life!=null){b.dead=true;continue;}b.x=VW+rand(0,50);b.y=rand(0,VH);}}
@@ -2206,7 +2231,7 @@ function renderShoot(){
  // HUD
  const tp=10+(VIS.t?0:0);ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(VW*0.25,tp,VW*0.5,20);ctx.fillStyle='#5ae6ff';ctx.fillRect(VW*0.25+2,tp+2,(VW*0.5-4)*clamp(p,0,1),16);
  ctx.fillStyle='#fff';ctx.font='700 12px "Zen Kaku Gothic New",sans-serif';ctx.textAlign='center';ctx.fillText(`海面まで ${Math.floor(clamp(p,0,1)*100)}%`,VW/2,tp+15);
- ctx.textAlign='left';ctx.font='900 16px sans-serif';let hs='';for(let i=0;i<5;i++)hs+=i<SH.hull?'■':'□';ctx.fillStyle=SH.hull<=2?'#ff5040':'#d9d6cc';ctx.fillText('船体 '+hs,14,tp+16);
+ ctx.textAlign='left';ctx.font='900 16px sans-serif';let hs='';for(let i=0;i<SH.maxHull;i++)hs+=i<SH.hull?'■':'□';ctx.fillStyle=SH.hull<=2?'#ff5040':'#d9d6cc';ctx.fillText('船体 '+hs,14,tp+16);
  ctx.fillStyle='#e0a030';ctx.fillText('⚡'.repeat(SH.flash)||'⚡×0',14,tp+40);
  ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(14,tp+50,90,6);ctx.fillStyle='#4ab0d0';ctx.fillRect(14,tp+50,90*SH.boost/100,6);
  if(SH.msgT>0){ctx.globalAlpha=clamp(SH.msgT,0,1);ctx.fillStyle='rgba(0,0,0,.6)';ctx.font='900 17px "Zen Kaku Gothic New",sans-serif';const w=ctx.measureText(SH.msg).width;ctx.fillRect(VW/2-w/2-14,VH*0.2-20,w+28,32);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.fillText(SH.msg,VW/2,VH*0.2+2);ctx.textAlign='left';ctx.globalAlpha=1;}
@@ -2242,6 +2267,105 @@ function drawShEcho(){
   const kx=(bx+tx)/2,ky=Math.min(by,ty)-40;limb(bx,by,kx,ky,12,'#b9bdc1','#111');limb(kx,ky,tx,ty,9,'#a9adb1','#111');drawHand(tx,ty,Math.atan2(ty-ky,tx-kx),0.3,1.8);}
  ctx.restore();
  ctx.save();ctx.globalCompositeOperation='lighter';const eye=SH.echoStun>0?(Math.random()<0.5?0.2:0.6):1;glow(ctx,'red',fx+VW*0.12,cy+6,70*eye,0.9*eye);glow(ctx,'blood',fx+VW*0.12,cy,VH*0.5,0.35*eye);ctx.restore();
+}
+
+// ================= progression / items / helper / extra enemies =================
+const UPG=[['stam','スタミナ強化','走れる時間 +25%'],['speed','俊足','移動の速さ +6%'],['light','高性能ライト','ライトの届く距離 +1'],['kit','装備パック','潜入開始時に閃光弾 +1'],['hull','強化船体','脱出艇の船体 +1']];
+const ITEMS={flash:['閃光弾','⚡'],trap:['電磁トラップ','🪤'],decoy:['おとり','📢']};
+const upLv=id=>(SAVE.upg||{})[id]||0;
+const upCap=()=>1+Math.min(3,SAVE.escapes||0);
+const upCost=lv=>150+lv*150;
+function buildUpg(){
+ const box=$('upgList');box.innerHTML='';const cap=Math.min(3,upCap());
+ $('upgInfo').textContent=`強化の上限：Lv${cap}（脱出するたびに上限が上がる）`;
+ for(const [id,n,d] of UPG){const lv=upLv(id);const e=document.createElement('div');e.className='item';
+  e.innerHTML=`<i class="sw" style="display:flex;align-items:center;justify-content:center;font-style:normal;font-size:18px;background:#1a160d">${'★'.repeat(lv)||'☆'}</i><div class="in"><b>${n}　Lv${lv}</b><small>${d}</small></div>`;
+  const b=document.createElement('button');b.className='ghost sm';const max=lv>=3,capd=lv>=cap;
+  b.textContent=max?'最大':capd?'次の周回で解放':`${upCost(lv)} CREDIT`;b.disabled=max||capd||SAVE.credits<upCost(lv);
+  b.onclick=()=>{SAVE.credits-=upCost(lv);SAVE.upg=SAVE.upg||{};SAVE.upg[id]=lv+1;save();S.paper();vib([30,40,60]);buildUpg();updateCredits();};
+  e.appendChild(b);box.appendChild(e);}
+ const d=Math.min(3,SAVE.escapes||0);const nx=['2周目：お助けドローン《HALO》が仲間に。監視カメラが動き出す','3周目：小型の子機（クローラー）が艦内を徘徊しはじめる','4周目：子機とカメラがさらに増える。ECHO-01も本気になる','すべて解放済み。最深部の恐怖を楽しめ'][d];
+ $('upgNext').textContent='次の周回：'+nx;
+}
+// ---- run bag (carried across chapters) ----
+function newBag(){return {flash:upLv('kit'),trap:0,decoy:0,sel:'flash'};}
+function bagCount(){const b=G.bag||{};return (b.flash||0)+(b.trap||0)+(b.decoy||0);}
+function selItem(){const b=G.bag;if(!b)return;const ks=Object.keys(ITEMS);let i=ks.indexOf(b.sel);for(let k=1;k<=3;k++){const n=ks[(i+k)%3];if(b[n]>0){b.sel=n;S.click();return;}}}
+function useItem(){
+ if(G.state!=='play'||G.paused||!P||!P.alive||P.vent||P.downed||P.locker)return;const b=G.bag;if(!b)return;
+ if(!(b[b.sel]>0)){selItem();if(!(b[b.sel]>0)){S.deny();toast('アイテムを持っていない');return;}}
+ const k=b.sel;b[k]--;
+ if(k==='flash'){G.flash=Math.max(G.flash,0.7);S.shotgun();vib([60,30,160],'fl',300);sparks(P.x,P.y,20,6);
+  if(E&&Math.hypot(E.x-P.x,E.y-P.y)<7.5&&los(P.x,P.y,E.x,E.y)){E.stunT=3.2;E.lunge=null;E.act=null;S.screech();toast('閃光弾でECHO-01がひるんだ！');badge('shot');}
+  for(const c of G.crawl||[])if(Math.hypot(c.x-P.x,c.y-P.y)<7&&los(P.x,P.y,c.x,c.y))c.stun=5;
+  for(const c of G.cams||[])if(Math.hypot(c.x+0.5-P.x,c.y+0.5-P.y)<9)c.off=12;makeNoise(P.x,P.y,10);}
+ else if(k==='trap'){(G.traps=G.traps||[]).push({x:P.x,y:P.y,arm:1});S.breaker();toast('電磁トラップを設置した');}
+ else if(k==='decoy'){(G.decoys=G.decoys||[]).push({x:P.x,y:P.y,t:7,beep:0});toast('おとりを置いた。ECHO-01が音に向かう');}
+ if(!(b[k]>0))selItem();
+}
+function spawnPickups(n){
+ G.pickups=[];if(Net.on)return;const kinds=['flash','flash','trap','decoy','kit','trap','decoy','flash'];const d=G.depth||0;const cnt=4+d+(n>=3?1:0);
+ const bad=new Set();for(const v of VENTS)for(const p of v)bad.add(I(p[0],p[1]));for(const dd of docs)bad.add(I(dd.x,dd.y));
+ for(let i=0;i<cnt;i++){for(let t=0;t<60;t++){const r=ROOMS[1+Math.floor(Math.random()*(ROOMS.length-1))];if(r.id==='hangar'||r.id==='main')continue;if(n<3&&r.sec==='研究区画')continue;
+   const x=r.x+Math.floor(Math.random()*r.w),y=r.y+Math.floor(Math.random()*r.h);if(tile(x,y)!==FLOOR||bad.has(I(x,y)))continue;bad.add(I(x,y));G.pickups.push({x,y,k:kinds[(i+Math.floor(Math.random()*3))%kinds.length],t:Math.random()*5});break;}}
+}
+function pickUp(it){const k=it.k;G.pickups=G.pickups.filter(q=>q!==it);S.paper();vib(30);
+ if(k==='kit'){P.bandage=(P.bandage||0)+1;G.kits=(G.kits||0)+1;toast('救急キット：捕まっても1回だけ立ち上がれる');}
+ else{G.bag[k]=(G.bag[k]||0)+1;G.bag.sel=k;toast(`${ITEMS[k][1]} ${ITEMS[k][0]}を手に入れた`);}
+}
+// ---- cameras (depth>=1) & crawlers (depth>=2) ----
+const CAMS=[[8,15,1],[23,15,1],[44,15,1],[29,18,-1],[14,31,1],[40,31,1]];
+function setupHazards(n){
+ const d=G.depth||0;G.cams=[];G.crawl=[];G.traps=[];G.decoys=[];G.halo=null;
+ if(d>=1)G.halo={x:P.x-0.8,y:P.y,cd:n>=3?0:20,ph:0,warnT:0,dash:null};
+ if(Net.on)return;
+ if(d>=1){const nc=Math.min(CAMS.length,2+d);for(let i=0;i<nc;i++){const [x,y,dir]=CAMS[i];G.cams.push({x,y,base:dir>0?Math.PI/2:-Math.PI/2,a:0,ph:Math.random()*6,off:0,cool:0});}}
+ if(d>=2&&n>=2){const nn=d>=3?4:2;for(let i=0;i<nn;i++){const pos=spawnEchoAway(10,30);if(pos)G.crawl.push({x:pos[0],y:pos[1],a:0,stun:0,path:null,pi:0,rp:0,ph:Math.random()*6,chase:false,hitCD:0});}}
+}
+function camSees(c){
+ if(c.off>0||!P||P.hidden||P.vent||P.locker||!P.alive)return false;const cx=c.x+0.5,cy=c.y+0.5+(c.base>0?0.45:-0.45);
+ const dx=P.x-cx,dy=P.y-cy,d=Math.hypot(dx,dy);if(d>5.5)return false;if(Math.abs(angDiff(c.base+c.a,Math.atan2(dy,dx)))>0.38)return false;return los(cx,cy,P.x,P.y);
+}
+function updateExtras(dt){
+ if(!P)return;
+ // pickups proximity handled in nearestInteract; traps
+ for(const t of G.traps||[]){t.arm=Math.max(0,t.arm-dt);if(t.arm>0)continue;
+  if(E&&!t.used&&Math.hypot(E.x-t.x,E.y-t.y)<0.95){t.used=true;E.stunT=4;E.lunge=null;E.act=null;sparks(t.x,t.y,26,7);const [v,p]=spat(t.x,t.y);S.crash(Math.max(0.3,v),p);S.screech();toast('電磁トラップ作動！ ECHO-01が止まった');}
+  for(const c of G.crawl||[])if(!t.used&&Math.hypot(c.x-t.x,c.y-t.y)<0.7){t.used=true;c.stun=8;sparks(t.x,t.y,14,5);}}
+ G.traps=(G.traps||[]).filter(t=>!t.used);
+ for(const d of G.decoys||[]){d.t-=dt;d.beep-=dt;if(d.beep<=0){d.beep=0.8;const [v,p]=spat(d.x,d.y,20);S.radio();if(E&&E.state!=='chase'&&!E.dormant){E.last=[d.x,d.y];if(E.state!=='search')setEchoState('search');E.searchT=3;}}}
+ G.decoys=(G.decoys||[]).filter(d=>d.t>0);
+ // cameras
+ for(const c of G.cams||[]){c.ph+=dt;c.a=Math.sin(c.ph*0.7)*0.75;c.off=Math.max(0,c.off-dt);c.cool=Math.max(0,c.cool-dt);
+  if(c.cool<=0&&camSees(c)){c.cool=6;S.deny();S.screech();G.redPulse=1;G.flick=1;vib([100,60,100],'cam',800);toast('監視カメラに見つかった！ ECHO-01が来る');
+   if(E&&!E.dormant){E.last=[P.x,P.y];setEchoState('search');E.searchT=6;}}}
+ // crawlers
+ for(const c of G.crawl||[]){c.ph+=dt*6;c.hitCD=Math.max(0,c.hitCD-dt);if(c.stun>0){c.stun-=dt;continue;}
+  const dP=Math.hypot(P.x-c.x,P.y-c.y);const see=!P.hidden&&!P.vent&&!P.locker&&dP<5.5&&los(c.x,c.y,P.x,P.y);c.chase=see;
+  c.rp-=dt;if(!c.path||c.rp<=0){const tg=see?[P.x,P.y]:[c.x+rand(-6,6),c.y+rand(-6,6)];c.path=findPath(c.x,c.y,tg[0],tg[1],false);c.pi=0;c.rp=see?0.4:rand(2,4);}
+  if(c.path&&c.pi<c.path.length){const [tx,ty]=c.path[c.pi];const dx=tx+0.5-c.x,dy=ty+0.5-c.y,d=Math.hypot(dx,dy);const sp=see?3.3:1.6;if(d<0.15)c.pi++;else{c.x+=dx/d*Math.min(d,sp*dt);c.y+=dy/d*Math.min(d,sp*dt);c.a=Math.atan2(dy,dx);}}
+  if(dP<0.6&&c.hitCD<=0&&P.inv<=0&&!P.downed){c.hitCD=4;c.stun=2.5;P.downT=1.1;P.vx=P.vy=0;G.shake=8;S.pound(0.8,0);vib([80,40,80],'cr',500);makeNoise(P.x,P.y,16);toast('子機に転ばされた！ 居場所がバレた');}
+  if(Math.random()<dt*3&&dP<9){const [v,p]=spat(c.x,c.y,9);if(v>0.05)S.click(v*0.6);}}
+ // HALO helper
+ const h=G.halo;if(h){h.ph+=dt;h.cd=Math.max(0,h.cd-dt);
+  if(h.dash){const D=h.dash;D.t+=dt;h.x+=(E.x-h.x)*Math.min(1,dt*6);h.y+=(E.y-h.y)*Math.min(1,dt*6);if(D.t>0.6){E.stunT=Math.max(E.stunT,2.2);sparks(E.x,E.y,16,6);S.crash(0.5,0);toast('HALOがECHO-01の気を引いた！');h.dash=null;h.cd=60;}}
+  else{const tx=P.x-Math.cos(P.face)*0.9+Math.cos(h.ph*1.3)*0.25,ty=P.y-Math.sin(P.face)*0.9+Math.sin(h.ph*1.7)*0.25;h.x+=(tx-h.x)*Math.min(1,dt*4);h.y+=(ty-h.y)*Math.min(1,dt*4);
+   if(E&&!E.dormant){const d=Math.hypot(E.x-P.x,E.y-P.y);h.warn=d<11;if(h.warn){h.warnT-=dt;if(h.warnT<=0){h.warnT=lerp(0.35,1.4,d/11);S.click(0.5);}}
+    if(h.cd<=0&&(E.state==='chase'||E.lunge)&&d<4.2&&E.stunT<=0){h.dash={t:0};S.servo(0.7,0);}}}}
+}
+function drawExtras(inView){
+ // pickups
+ for(const it of G.pickups||[]){if(!inView(it.x,it.y))continue;const X=(it.x+0.5)*T,Y=(it.y+0.5)*T+Math.sin(G.t*2.5+it.t)*2;ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(X-9,Y-4,20,12);ctx.fillStyle='#2a3036';ctx.fillRect(X-10,Y-10,20,18);ctx.strokeStyle='#e0a030';ctx.lineWidth=1.5;ctx.strokeRect(X-10,Y-10,20,18);ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText(it.k==='kit'?'✚':ITEMS[it.k][1],X,Y+4);ctx.textAlign='left';}
+ for(const t of G.traps||[]){ctx.fillStyle=t.arm>0?'#6a6f74':'#4ab0d0';ctx.beginPath();ctx.arc(t.x*T,t.y*T,7,0,TAU);ctx.fill();ctx.strokeStyle='rgba(90,230,255,.7)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(t.x*T,t.y*T,10+Math.sin(G.t*6)*2,0,TAU);ctx.stroke();}
+ for(const d of G.decoys||[]){ctx.fillStyle='#e0a030';ctx.fillRect(d.x*T-5,d.y*T-5,10,10);ctx.strokeStyle=`rgba(224,160,48,${(d.beep/0.8)})`;ctx.beginPath();ctx.arc(d.x*T,d.y*T,(1-d.beep/0.8)*30+6,0,TAU);ctx.stroke();}
+ for(const c of G.cams||[]){if(!inView(c.x,c.y,6))continue;const cx=(c.x+0.5)*T,cy=(c.y+0.5)*T+(c.base>0?T*0.45:-T*0.45);
+  if(c.off<=0){const a=c.base+c.a;const g=ctx.createRadialGradient(cx,cy,2,cx,cy,5.5*T);g.addColorStop(0,'rgba(255,40,24,.28)');g.addColorStop(1,'rgba(255,40,24,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,5.5*T,a-0.38,a+0.38);ctx.closePath();ctx.fill();}
+  ctx.fillStyle='#1c2126';ctx.fillRect(cx-8,cy-6,16,12);ctx.fillStyle=c.off>0?'#444':(Math.sin(G.t*8)>0?'#ff3020':'#801008');ctx.beginPath();ctx.arc(cx,cy,3,0,TAU);ctx.fill();}
+ for(const c of G.crawl||[]){if(!inView(c.x,c.y))continue;ctx.save();ctx.translate(c.x*T,c.y*T);ctx.rotate(c.a);ctx.strokeStyle='#8a8f96';ctx.lineWidth=2.5;ctx.lineCap='round';
+  for(let i=0;i<4;i++){const s=i<2?-1:1,f=i%2?-1:1;const w=Math.sin(c.ph+i*1.6)*4;ctx.beginPath();ctx.moveTo(f*4,s*3);ctx.lineTo(f*10+w,s*10);ctx.lineTo(f*14+w,s*8);ctx.stroke();}
+  ctx.fillStyle=c.stun>0?'#555':'#c3c7cb';ctx.beginPath();ctx.ellipse(0,0,8,6,0,0,TAU);ctx.fill();ctx.fillStyle=c.stun>0?'#333':'#ff2a1a';ctx.beginPath();ctx.arc(6,0,2.5,0,TAU);ctx.fill();ctx.restore();}
+ const h=G.halo;if(h){const X=h.x*T,Y=h.y*T-10+Math.sin(h.ph*3)*3;ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(h.x*T+3,h.y*T+6,7,3,0,0,TAU);ctx.fill();ctx.fillStyle='#e8eaec';ctx.beginPath();ctx.arc(X,Y,6,0,TAU);ctx.fill();ctx.fillStyle=h.cd>0?'#4ab0d0':'#50d080';ctx.beginPath();ctx.arc(X,Y,2.6,0,TAU);ctx.fill();ctx.strokeStyle='rgba(200,210,215,.7)';ctx.lineWidth=1.2;const r=Math.sin(h.ph*30)*9;ctx.beginPath();ctx.moveTo(X-r,Y-8);ctx.lineTo(X+r,Y-8);ctx.stroke();
+  if(h.warn&&E&&!h.dash){const a=Math.atan2(E.y-P.y,E.x-P.x);const ax=P.x*T+Math.cos(a)*34,ay=P.y*T+Math.sin(a)*34;ctx.save();ctx.translate(ax,ay);ctx.rotate(a);ctx.fillStyle=`rgba(255,60,40,${0.6+0.4*Math.sin(G.t*10)})`;ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-5,-6);ctx.lineTo(-5,6);ctx.fill();ctx.restore();}}
 }
 
 // ================= loop =================
