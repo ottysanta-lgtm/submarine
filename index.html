@@ -321,7 +321,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.85（新フロア追加）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.86（新フロア追加）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -963,7 +963,7 @@ function sparks(x,y,n,spd=6){for(let i=0;i<n;i++){const a=rand(0,TAU),s=rand(spd
 function steam(x,y){for(let i=0;i<3;i++)part({t:'steam',x:x+rand(-0.1,0.1),y,vx:rand(-0.2,0.2),vy:rand(-0.9,-0.4),life:rand(1,1.8),max:1.8,s:rand(0.15,0.3)});}
 
 // ================= spatial helpers =================
-function spat(x,y,range=16){const dx=x-P.x,dy=y-P.y,d=Math.hypot(dx,dy);let v=clamp(1-d/range,0,1);v*=v;if(!los(P.x,P.y,x,y))v*=0.45;return [v,clamp(dx/7,-1,1),d];}
+function spat(x,y,range=16){const L=REALP||P;const dx=x-L.x,dy=y-L.y,d=Math.hypot(dx,dy);let v=clamp(1-d/range,0,1);v*=v;if(!los(L.x,L.y,x,y))v*=0.45;return [v,clamp(dx/7,-1,1),d];}
 function makeNoise(x,y,r){if(!E||G.state!=='play')return;const d=Math.hypot(E.x-x,E.y-y);if(d<r&&E.state!=='chase'&&E.stunT<=0){E.last=[x,y];setEchoState('search');E.searchT=5;}}
 
 // ================= pathfinding =================
@@ -1134,7 +1134,7 @@ function animateEcho(dt,spd){
 }
 
 // ================= player =================
-function pushPlayer(dx,dy){moveP(dx,dy,false);}
+function pushPlayer(dx,dy){if(P&&P.isP2)return;moveP(dx,dy,false);}
 function moveP(dx,dy,ignoreObst){
  const r=0.28;
  const tryAxis=(ax,d)=>{if(!d)return;const nx=P.x+(ax?d:0),ny=P.y+(ax?0:d);const x0=Math.floor(nx-r),x1=Math.floor(nx+r),y0=Math.floor(ny-r),y1=Math.floor(ny+r);
@@ -1224,7 +1224,7 @@ function doAction(){
   case 'unhide':{P.locker=null;P.hidden=false;P.inv=Math.max(P.inv,0.3);S.locker();break;}
   case 'breaker':{const b=it.b;P.work={t:0,dur:1.8,done:()=>{if(Net.on&&!Net.host){netAct('brk',G.breakers.indexOf(b));S.breaker();return;}breakerOn(b);}};S.servo(0.6,0);break;}
   case 'sub':if(Net.on&&!Net.host)netAct('board');else startEscape();break;
-  case 'revive':{P.work={t:0,dur:role.id==='medic'?0.8:2,done:()=>{if(Net.host){P2.down=false;P2.inv=3;toast('相棒を助け起こした');}else netAct('rev');badge('revive');S.click();}};break;}
+  case 'revive':{P.work={t:0,dur:role.id==='medic'?0.8:2,done:()=>{if(Net.host){P2.down=false;P2.inv=3;P2.hp=3;toast('相棒を助け起こした');}else netAct('rev');badge('revive');S.click();}};break;}
  }
 }
 function resolvePlayerFromShutter(s){if(Math.floor(P.x)===s.x&&Math.floor(P.y)===s.y){pushPlayer(0,0.5);}}
@@ -1409,7 +1409,7 @@ function startGame(){
 function waitHost(){G.state='story';$('story').hidden=false;$('story').onclick=null;$('storyTag').textContent='接続';$('storyText').textContent='ホストの潜入を待っています……';$('storyImg').hidden=true;}
 function startChapter(n){
  Snd.init();goFullscreen();mapSetup(Net.on&&!Net.host?WIDE:(SAVE.mapMode==='wide'||Net.on),!Net.on&&(SAVE.mapMode==='deck'?'deck':SAVE.mapMode==='tower'?'tower':false));
- if(Net.on&&Net.host){Net.cid++;P2=P2||newPartner();P2.down=false;P2.bandUsed=false;P2.seen=false;}
+ if(Net.on&&Net.host){Net.cid++;P2=P2||newPartner();P2.down=false;P2.hp=null;P2.bandUsed=false;P2.seen=false;}
  const cp=G.checkpoint&&G.checkpoint.ch===n?G.checkpoint:null;
  buildGrid();G.ch=n;
  G.breakers=BREAKERS.map((b,i)=>({...b,on:n>=3||(cp?!!cp.breakers[i]:false)}));
@@ -2040,11 +2040,20 @@ function hostSnap(){
   e:E?[r2(E.x),r2(E.y),r2(E.ang),r2(E.spd),r2(E.eye),E.od?1:0,E.stunT>0?1:0,r2(E.climb),r2(E.crouch),(E.state==='chase'||E.lunge)?1:0,E.act?E.act.x:-1,E.act?E.act.y:-1,E.dormant?1:0]:null,
   sh:shutters.map(q=>q.broken?2:q.closed?1:0).join(''),g:gates.map(q=>q.open?1:0).join(''),br:(G.breakers||[]).map(b=>b.on?1:0).join(''),
   dk:docs.map(d=>d.got?1:0).join(''),dp:docs.map(d=>[d.x,d.y]),rb:decals.filter(d=>d.t==='rubble').map(d=>d.y*MW+d.x),
-  sub:r2(G.subRise),bo:r2(G.blackout||0),mm:WIDE?1:0,bh:G.bossHP==null?-1:G.bossHP,bd:G.bossDown?1:0,ct:r2(G.coreT||0),gd:P2&&P2.down?1:0,ev:Net.ev};
+  sub:r2(G.subRise),bo:r2(G.blackout||0),mm:WIDE?1:0,bh:G.bossHP==null?-1:G.bossHP,bd:G.bossDown?1:0,ct:r2(G.coreT||0),gd:P2&&P2.down?1:0,ev:Net.ev,
+  hs:(G.hunters||[]).map(h=>[h.id,h.type,r2(h.x),r2(h.y),r2(h.a),h.st,(h.stun>0||h.sleep>0)?1:0,h.boss?1:0,h.rest>0?1:0]),
+  gs:(G.guards||[]).map(g=>[g.id,g.type,r2(g.x),r2(g.y),r2(g.a),g.state,g.sleep>0?1:0,r2(g.sus||0)]),
+  bl:(G.bullets||[]).map(b=>[r2(b.x),r2(b.y)]),gp:G.phase||'normal',ex:G.exit?[G.exit.n,G.exit.x,G.exit.y]:0};
 }
+function shPack(){
+ if(!SH||SH.total==null)return null;
+ const fo=(SH.foes||[]).filter(f=>f.x>-40&&f.x<VW+40).slice(0,14).map(f=>[f.k==='mine'?0:f.k==='drone'?1:f.k==='debris'?2:3,Math.round(f.x),Math.round(f.y),Math.round(f.r||12)]);
+ return [Math.round(SH.x),Math.round(SH.y),Math.round(SH.echo),+(SH.dist/SH.total).toFixed(3),SH.hull,SH.maxHull,fo,SH.inv>0?1:0,SH.bossOn?1:0];
+}
+function shStatus(){return G.shooting?(G.state==='shoot'?1:G.state==='result'?(G.lastWin?2:3):G.state==='caught'?3:1):0;}
 function netSend(force){
  if(!Net.on||!Net.room)return;
- const pr={v:1,vs:Net.vs?1:0,r:Net.host?'h':'g',role:role.id,suit:SAVE.equip.suit,light:SAVE.equip.light,go:Net.goId,rdy:Net.ready?1:0,p:(G.state==='play'||G.state==='doc'||G.state==='escape'||G.state==='caught')?myP():null};
+ const pr={v:1,vs:Net.vs?1:0,r:Net.host?'h':'g',role:role.id,suit:SAVE.equip.suit,light:SAVE.equip.light,go:Net.goId,rdy:Net.ready?1:0,ss:shStatus(),sh:G.state==='shoot'?shPack():null,p:(G.state==='play'||G.state==='doc'||G.state==='escape'||G.state==='caught')?myP():null};
  if(Net.host){pr.s=P&&(G.state!=='lobby')?hostSnap():null;}else{pr.acts=Net.acts;pr.bd=P?P.bandage:0;if(Net.vs)pr.ec=Net.ecIn;}
  try{Net.room.presence(pr).catch(()=>{});}catch(e){}
 }
@@ -2078,11 +2087,19 @@ function hostApplyAct(a){
   case 'shut':{const s=shutters[x];if(!s||s.broken)break;const close=!!y;s.closed=close;s.ignoreT=0;const [v,p]=spat(s.x+0.5,s.y+0.5);S.shutter(close,Math.max(0.25,v),p);if(close)makeNoise(s.x+0.5,s.y+0.5,9);break;}
   case 'rep':{const s=shutters[x];if(s){s.broken=false;s.closed=false;}break;}
   case 'brk':{const b=(G.breakers||[])[x];if(b&&!b.on)breakerOn(b);break;}
-  case 'shot':{if(!E)break;const dx=E.x-x,dy=E.y-y,d=Math.hypot(dx,dy);makeNoise(x,y,14);const [v,p]=spat(x,y);if(v>0.05)S.pound(v,p);if(d<5.5&&Math.abs(angDiff(z,Math.atan2(dy,dx)))<0.65&&los(x,y,E.x,E.y)){E.stunT=2.5;E.lunge=null;E.act=null;sparks(E.x,E.y,24,7);S.screech();netEv('toast','相棒の射撃でECHO-01が怯んだ');}break;}
+  case 'shot':{if(!E)break;const dx=E.x-x,dy=E.y-y,d=Math.hypot(dx,dy);makeNoise(x,y,14);const [v,p]=spat(x,y);if(v>0.05)S.pound(v,p);if(d<5.5&&Math.abs(angDiff(z,Math.atan2(dy,dx)))<0.65&&los(x,y,E.x,E.y)){E.stunT=2.5;E.lunge=null;E.act=null;sparks(E.x,E.y,24,7);S.screech();netEv('toast','相棒の射撃でECHO-01が怯んだ');}
+   for(const h of G.hunters||[]){const hx=h.x-x,hy=h.y-y,hd=Math.hypot(hx,hy);if(h.sleep<=0&&hd<6&&Math.abs(angDiff(z,Math.atan2(hy,hx)))<0.55&&los(x,y,h.x,h.y)){if(h.type==='bat'&&!h.boss){h.dead=true;sparks(h.x,h.y,8,4);}else h.sleep=h.boss?5:10;break;}}
+   for(const g of G.guards||[]){const gx=g.x-x,gy=g.y-y,gd=Math.hypot(gx,gy);if(g.sleep<=0&&gd<7&&Math.abs(angDiff(z,Math.atan2(gy,gx)))<0.55&&los(x,y,g.x,g.y)){g.sleep=g.type==='drone'?40:30;g.sus=0;break;}}
+   break;}
+  case 'flash':{makeNoise(x,y,10);const [v,p]=spat(x,y);if(v>0.05)S.pound(v,p);
+   if(E&&Math.hypot(E.x-x,E.y-y)<7.5&&los(x,y,E.x,E.y)){E.stunT=3.2;E.lunge=null;E.act=null;S.screech();netEv('toast','相棒の閃光弾でECHO-01がひるんだ！');}
+   for(const c of G.crawl||[])if(Math.hypot(c.x-x,c.y-y)<7&&los(x,y,c.x,c.y))c.stun=5;stunHunters(x,y,7,5,true);
+   for(const g of G.guards||[])if(g.sleep<=0&&Math.hypot(g.x-x,g.y-y)<8.5&&los(x,y,g.x,g.y)){g.sleep=g.type==='drone'?6:5;g.sus=0;}
+   for(const c of G.cams||[])if(Math.hypot(c.x+0.5-x,c.y+0.5-y)<9)c.off=12;break;}
   case 'rev':{if(P.downed){P.downed=false;P.inv=2.5;toast('相棒に助け起こされた');}break;}
   case 'board':{if(G.state==='play'&&G.unlocked)startEscape();break;}
   case 'noise':makeNoise(x,y,y?9:9);break;
-  case 'band':{if(P2){P2.down=false;P2.inv=3;}break;}
+  case 'band':{if(P2){P2.down=false;P2.inv=3;P2.hp=3;}break;}
   case 'pull':{P.dash={sx:P.x,sy:P.y,ex:x,ey:y,t:0,dur:0.4};toast('相棒に引き寄せられた');break;}
   case 'pyl':{const p=(G.pylons||[])[x];if(p&&p.cd<=0&&p.ch<=0){p.ch=1.3;S.breaker();}break;}
   case 'fin':bossFinish();break;
@@ -2120,7 +2137,20 @@ function guestApply(s){
  if(s.bo>G.blackout)G.blackout=s.bo;
  const wasDown=P.downed;P.downed=!!s.gd;if(P.downed&&!wasDown){G.flash=0.7;G.shake=14;S.stinger();spotFlash(0.5);toast('捕まった！ 相棒に助けてもらえ');}if(!P.downed&&wasDown){P.inv=2.5;toast('助け起こされた');}
  if(s.e&&E){const e=s.e;E.tx=e[0];E.ty=e[1];E.ta=e[2];E.spd=e[3];E.eye=e[4];E.od=!!e[5];E.stunT=e[6]?0.2:0;E.climb=e[7];E.crouch=e[8];const ch=!!e[9];if(ch&&E.state!=='chase'){S.screech();const d=Math.hypot(E.x-P.x,E.y-P.y);if(d<9&&los(P.x,P.y,E.x,E.y))spotFlash();}E.state=ch?'chase':'patrol';E.actX=e[10];E.actY=e[11];E.dormant=!!e[12];}
+ guestFloorSync(s);
  for(const ev of s.ev||[]){if(ev[0]<=Net.seenEv)continue;Net.seenEv=ev[0];guestEv(ev);}
+}
+function guestFloorSync(s){
+ if(s.ex){if(!G.exit||G.exit.n!==s.ex[0])G.exit={n:s.ex[0],x:s.ex[1],y:s.ex[2]};}else G.exit=null;
+ const mh=new Map((G.hunters||[]).map(h=>[h.id,h]));const nh=[];
+ for(const r of s.hs||[]){let h=mh.get(r[0]);if(!h)h={id:r[0],type:r[1],x:r[2],y:r[3],a:r[4],st:'patrol',path:null,pi:0,rp:0,stun:0,sleep:0,cd:0,ph:rand(0,6),last:null,lostT:0,wait:0,tgt:null,barked:true,flee:0};
+  h.type=r[1];h.tx=r[2];h.ty=r[3];h.ta=r[4];h.st=r[5];h.stun=r[6]?1:0;h.boss=!!r[7];h.rest=r[8]?1:0;nh.push(h);}
+ G.hunters=nh;
+ const mg=new Map((G.guards||[]).map(g=>[g.id,g]));const ng=[];
+ for(const r of s.gs||[]){let g=mg.get(r[0]);if(!g)g={id:r[0],type:r[1],x:r[2],y:r[3],a:r[4],route:[[r[2],r[3]]],ri:0,state:'patrol',sus:0,hp:1,wait:0,path:null,pi:0,rp:0,fireT:1,seen:false,sleep:0,look:0,ph:rand(0,6),secs:null};
+  g.type=r[1];g.tx=r[2];g.ty=r[3];g.ta=r[4];g.state=r[5];g.sleep=r[6]?1:0;g.sus=r[7];ng.push(g);}
+ G.guards=ng;G.bullets=(s.bl||[]).map(b=>({x:b[0],y:b[1],vx:0,vy:0,t:1}));
+ if(s.gp&&s.gp!==G.phase){if(s.gp==='alert'&&G.phase!=='alert'){S.alarm();setTimeout(()=>S.subEngine(),900);toast('警報！ 警備兵に見つかった');}G.phase=s.gp;}
 }
 function guestEv([,n,a,b]){
  switch(n){
@@ -2131,6 +2161,8 @@ function guestEv([,n,a,b]){
   case 'alarm':S.alarm();setTimeout(()=>S.subEngine(),900);G.shake=10;break;
   case 'screech':S.screech();break;
   case 'ghost':ghostEyes();break;
+  case 'ghit':if(P){P.hp=+a;P.inv=1.3;G.shake=9;G.flash=0.35;vib([90,40,90],'hurt',300);S.hurtSpark();}break;
+  case 'hunt':{const [v,p]=spat(+a,+b,18);const bt=(G.hunters||[]).find(h=>Math.hypot(h.x-a,h.y-b)<3);if(bt&&bt.type==='bat')S.screech();else{S.pound(Math.max(0.3,v),p);setTimeout(()=>S.pound(Math.max(0.3,v),p),160);}G.redPulse=Math.max(G.redPulse,0.6);vib([60,40,60],'hunt',800);break;}
   case 'white':if(Net.vs){G.whiteMax=+a||4;G.whiteT=G.whiteMax;if(b==='c')S.staticBurst();else S.shotgun();toast(b==='c'?'チャフで画面が乱れた！主人公を見失った':'閃光弾！ 画面が真っ白で何も見えない');}break;
   case 'pound':{const x=+a,y=+b;const [v,p]=spat(x+0.5,y+0.5,40);S.pound(Math.max(0.3,v),p);G.shake=Math.max(G.shake,4);G.flick=1;break;}
   case 'escape':if(Net.vs){vsResult(false);break;}if(G.state==='play')startEscape();break;
@@ -2141,6 +2173,8 @@ function guestEv([,n,a,b]){
 }
 function guestUpdate(dt){
  if(Net.vs)vsGuestFrame(dt);else updatePlayer(dt);if(!G.steams)setupGimmicks();updateGimmicks(dt);
+ {const k=Math.min(1,dt*12);for(const h of G.hunters||[]){h.ph+=dt;if(h.tx!=null){h.x+=(h.tx-h.x)*k;h.y+=(h.ty-h.y)*k;h.a+=angDiff(h.a,h.ta)*k;}}
+  for(const g of G.guards||[]){g.ph+=dt;if(g.tx!=null){g.x+=(g.tx-g.x)*k;g.y+=(g.ty-g.y)*k;g.a+=angDiff(g.a,g.ta)*k;}if(!g.seen&&Math.hypot(g.x-P.x,g.y-P.y)<8.5&&los(P.x,P.y,g.x,g.y))g.seen=true;}}
  if(E){if(E.tx!=null){const k=Math.min(1,dt*12);E.x+=(E.tx-E.x)*k;E.y+=(E.ty-E.y)*k;E.ang+=angDiff(E.ang,E.ta)*Math.min(1,dt*12);}
   animateEcho(dt,E.spd||0);const [hv,hp]=spat(E.x,E.y,15);Snd.hum(E.dormant?hv*0.4:hv,hp,E.state==='chase');
   if(E.actX>=0){E.pT=(E.pT||0)-dt;if(E.pT<=0){E.pT=0.42;const [v,p]=spat(E.actX+0.5,E.actY+0.5,18);S.pound(Math.max(0.15,v),p);sparks(E.actX+0.5,E.actY+0.5,4,5);}}}
@@ -2347,7 +2381,32 @@ function updateShoot(dt){
  if(ph===3&&!SH.p3){SH.p3=1;shMsg('もう少しで海面だ――！',2.2);}
 }
 function shBoom(x,y,s){S.crash(0.45*s,clamp((x-VW/2)/VW*2,-1,1));SH.shake=Math.max(SH.shake,5*s);for(let i=0;i<22;i++)SH.fx.push({x,y,vx:rand(-220,220)*s,vy:rand(-220,220)*s,l:rand(0.3,0.8),m:0.8,c:i%3?'255,150,60':'255,230,160'});}
-function renderShoot(){
+function drawPartnerPip(){
+ if(!Net.on||Net.vs)return;const pp=partnerPeer();if(!pp)return;const pr=pp.presence;if(!pr||!pr.ss)return;
+ const w=176,h=98,x0=VW-w-10,y0=54;
+ ctx.save();ctx.setTransform(DPR*SCALE,0,0,DPR*SCALE,0,0);ctx.globalAlpha=0.94;
+ ctx.fillStyle='rgba(2,10,16,.88)';ctx.fillRect(x0-2,y0-2,w+4,h+4);
+ const g=ctx.createLinearGradient(0,y0,0,y0+h);g.addColorStop(0,'#0a2230');g.addColorStop(1,'#010407');ctx.fillStyle=g;ctx.fillRect(x0,y0,w,h);
+ ctx.strokeStyle='rgba(120,220,255,.55)';ctx.lineWidth=1.5;ctx.strokeRect(x0-2,y0-2,w+4,h+4);
+ ctx.font='700 10px "Zen Kaku Gothic New",sans-serif';ctx.textAlign='left';ctx.fillStyle='#9fe6ff';ctx.fillText('相棒の脱出',x0+4,y0+11);
+ const d=pr.sh;
+ if(pr.ss===1&&d){
+  const sx=w/VW,sy=(h-14)/VH,oy=y0+14;
+  ctx.save();ctx.beginPath();ctx.rect(x0,oy,w,h-14);ctx.clip();
+  ctx.fillStyle='rgba(255,40,30,.28)';ctx.fillRect(x0,oy,Math.max(0,(d[2]+VW*0.12)*sx),h-14);
+  for(const f of d[6]){const fx=x0+f[1]*sx,fy=oy+f[2]*sy,fr=Math.max(2,f[3]*sx*1.4);ctx.fillStyle=f[0]===0?'#ff4a3a':f[0]===1?'#ffb040':f[0]===2?'#8a9298':'#c070ff';ctx.beginPath();ctx.arc(fx,fy,fr,0,TAU);ctx.fill();}
+  const px=x0+d[0]*sx,py=oy+d[1]*sy;ctx.fillStyle=d[7]&&Math.floor(G.t*10)%2?'#ffffff':'#4cff9a';ctx.beginPath();ctx.moveTo(px+7,py);ctx.lineTo(px-5,py-4);ctx.lineTo(px-5,py+4);ctx.closePath();ctx.fill();
+  ctx.restore();
+  ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(x0,y0+h-4,w,4);ctx.fillStyle='#4cff9a';ctx.fillRect(x0,y0+h-4,w*Math.min(1,d[3]),4);
+  ctx.textAlign='right';ctx.fillStyle=d[4]<=1?'#ff6a5a':'#ffd07a';ctx.fillText('船体 '+Math.max(0,d[4])+'/'+d[5],x0+w-4,y0+11);
+ }else{
+  ctx.textAlign='center';ctx.font='700 13px "Zen Kaku Gothic New",sans-serif';
+  ctx.fillStyle=pr.ss===2?'#4cff9a':pr.ss===3?'#ff6a5a':'#9fe6ff';ctx.fillText(pr.ss===2?'脱出成功！':pr.ss===3?'脱落…':'接続中…',x0+w/2,y0+h/2+6);
+ }
+ ctx.restore();
+}
+function renderShoot(){renderShoot0();drawPartnerPip();}
+function renderShoot0(){
  ctx.setTransform(DPR*SCALE,0,0,DPR*SCALE,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
  const p=SH.dist/SH.total,ph=shPhase();
  const sx=SH.shake?rand(-1,1)*SH.shake*0.5:0,sy=SH.shake?rand(-1,1)*SH.shake*0.5:0;
@@ -2463,7 +2522,7 @@ function useItem(){
  if(!(b[b.sel]>0)){selItem();if(!(b[b.sel]>0)){S.deny();toast('アイテムを持っていない');return;}}
  const k=b.sel;b[k]--;
  if(useItem2(k)){if(!(b[k]>0))selItem();return;}
- if(k==='flash'){if(Net.on&&Net.vs&&Net.host)netEv('white',4.5,'f');G.flash=Math.max(G.flash,0.7);S.shotgun();vib([60,30,160],'fl',300);sparks(P.x,P.y,20,6);
+ if(k==='flash'){if(Net.on&&Net.vs&&Net.host)netEv('white',4.5,'f');if(Net.on&&!Net.host&&!Net.vs)netAct('flash',r2(P.x),r2(P.y));G.flash=Math.max(G.flash,0.7);S.shotgun();vib([60,30,160],'fl',300);sparks(P.x,P.y,20,6);
   if(E&&Math.hypot(E.x-P.x,E.y-P.y)<7.5&&los(P.x,P.y,E.x,E.y)){E.stunT=3.2;E.lunge=null;E.act=null;S.screech();toast('閃光弾でECHO-01がひるんだ！');badge('shot');}
   for(const c of G.crawl||[])if(Math.hypot(c.x-P.x,c.y-P.y)<7&&los(P.x,P.y,c.x,c.y))c.stun=5;stunHunters(P.x,P.y,7,5,true);
   {let hit=0;for(const g of G.guards||[])if(g.sleep<=0&&Math.hypot(g.x-P.x,g.y-P.y)<8.5&&los(P.x,P.y,g.x,g.y)){g.sleep=g.type==='drone'?6:5;g.sus=0;hit++;}if(hit)toast('閃光弾で警備がひるんだ！今のうちに逃げろ');}
@@ -2569,10 +2628,10 @@ function newBag2(b){const r=Object.assign({dart:6+upLv('kit')*2,emp:0,chaff:0,bo
 const GT={guard:{hp:1,spd:1.3,aspd:2.9,rng:5.5,fov:0.62,cqc:true,col:'#3b4a58'},heavy:{hp:2,spd:1.0,aspd:2.4,rng:6.5,fov:0.45,cqc:false,col:'#5a4a3a'},drone:{hp:1,spd:1.6,aspd:3.2,rng:3.6,fov:3.2,cqc:false,col:'#6a7076'}};
 const CH_ZONE={1:['居住区','管制区画'],2:['機関区画'],3:['研究区画'],4:['研究区画','最終脱出区画']};
 function zoneTile(secs){for(let k=0;k<80;k++){const r=ROOMS[Math.floor(Math.random()*ROOMS.length)];if(!secs.includes(r.sec)&&!(r.id==='main'&&Math.random()<0.4))continue;const x=r.x+Math.floor(Math.random()*r.w),y=r.y+Math.floor(Math.random()*r.h);if(tile(x,y)===FLOOR&&Math.hypot(x-P.x,y-P.y)>9)return [x+0.5,y+0.5];}return null;}
-function newGuard(type,pos,secs){const route=[pos];for(let i=0;i<3;i++){const q=zoneTile(secs);if(q)route.push(q);}return {type,x:pos[0],y:pos[1],a:rand(0,TAU),route,ri:1,state:'patrol',sus:0,hp:GT[type].hp,wait:rand(0,2),path:null,pi:0,rp:0,fireT:1,seen:false,sleep:0,look:0,ph:rand(0,6),secs};}
+function newGuard(type,pos,secs){const route=[pos];for(let i=0;i<3;i++){const q=zoneTile(secs);if(q)route.push(q);}return {id:++GID,type,x:pos[0],y:pos[1],a:rand(0,TAU),route,ri:1,state:'patrol',sus:0,hp:GT[type].hp,wait:rand(0,2),path:null,pi:0,rp:0,fireT:1,seen:false,sleep:0,look:0,ph:rand(0,6),secs};}
 function setupGuards(n){
  G.guards=[];G.bullets=[];G.darts=[];G.phase='normal';G.phaseT=0;G.lastSeenT=99;G.alertPos=null;G.reinf=0;
- if(Net.on||n>=5)return;const d=G.depth||0,secs=(WIDE&&n===2)?['機関区画','下層区画']:(CH_ZONE[n]||CH_ZONE[3]);
+ if((Net.on&&!soloFloors())||n>=5)return;const d=G.depth||0,secs=(WIDE&&n===2)?['機関区画','下層区画']:(CH_ZONE[n]||CH_ZONE[3]);
  const list={1:['guard','guard'],2:['guard','guard','drone'],3:['guard','heavy','drone'],4:['drone']}[n]||[];
  if(WIDE&&(n===2||n===3))list.push('guard','heavy');
  for(const t of list){const p=zoneTile(secs);if(p)G.guards.push(newGuard(t,p,secs));}
@@ -2594,10 +2653,10 @@ function callReinforce(){if(G.reinf>=2)return;radio('こちら警備班、侵入
 function updateGuards(dt){
  if(!G.guards)return;G.chaff=Math.max(0,(G.chaff||0)-dt);if(G.dev&&G.dev.camo)P.camo=99;else if(P.camo>0)P.camo-=dt;
  let anySee=false;
- for(const g of G.guards){
-  if(g.state==='dead')continue;g.ph+=dt;const T_=GT[g.type];
-  if(E&&!E.dormant&&E.stunT<=0&&Math.hypot(E.x-g.x,E.y-g.y)<1.1){g.state='dead';sparks(g.x,g.y,14,5);const [v,p]=spat(g.x,g.y);S.crash(Math.max(0.2,v*0.8),p);if(v>0.15)toast('警備兵がECHO-01に襲われた……');continue;}
-  if(g.sleep>0){g.sleep-=dt;if(g.sleep<=0){g.state='search';g.sus=0.5;g.look=4;}continue;}
+ for(const g of G.guards){const _sp=P;const _q=coopTarget(g);if(_q!==P)REALP=_sp;P=_q;try{(()=>{
+  if(g.state==='dead')return;g.ph+=dt;const T_=GT[g.type];
+  if(E&&!E.dormant&&E.stunT<=0&&Math.hypot(E.x-g.x,E.y-g.y)<1.1){g.state='dead';sparks(g.x,g.y,14,5);const [v,p]=spat(g.x,g.y);S.crash(Math.max(0.2,v*0.8),p);if(v>0.15)toast('警備兵がECHO-01に襲われた……');return;}
+  if(g.sleep>0){g.sleep-=dt;if(g.sleep<=0){g.state='search';g.sus=0.5;g.look=4;}return;}
   // visual discovery for minimap
   if(!g.seen&&Math.hypot(g.x-P.x,g.y-P.y)<8.5&&los(P.x,P.y,g.x,g.y))g.seen=true;
   const k=guardSees(g);
@@ -2619,6 +2678,7 @@ function updateGuards(dt){
   if(g.type==='drone'&&g.state==='alert'&&G.phase==='alert'&&Math.random()<dt*0.2)callReinforce();
   if(tgt){g.rp-=dt;if(!g.path||g.rp<=0){g.path=findPath(g.x,g.y,tgt[0],tgt[1],false);g.pi=0;g.rp=g.state==='alert'?0.5:3;}
    if(g.path&&g.pi<g.path.length){const [tx,ty]=g.path[g.pi];const dx=tx+0.5-g.x,dy=ty+0.5-g.y,d=Math.hypot(dx,dy);if(d<0.15)g.pi++;else{g.x+=dx/d*Math.min(d,sp*dt);g.y+=dy/d*Math.min(d,sp*dt);g.a+=angDiff(g.a,Math.atan2(dy,dx))*Math.min(1,dt*6);}}else g.path=null;}
+  })();}finally{P=_sp;REALP=null;}
  }
  G.guards=G.guards.filter(g=>g.state!=='dead');
  for(const q of G.cams||[])if(!q.seen&&Math.hypot(q.x+0.5-P.x,q.y+0.5-P.y)<8&&los(P.x,P.y,q.x+0.5,q.y+0.5))q.seen=true;
@@ -2630,7 +2690,8 @@ function updateGuards(dt){
  else if(G.phase==='caution'){G.phaseT-=dt;if(G.phaseT<=0)setPhase('normal');}
  // bullets
  for(const b of G.bullets){b.x+=b.vx*dt;b.y+=b.vy*dt;b.t-=dt;if(opaque(Math.floor(b.x),Math.floor(b.y)))b.t=0;
-  if(b.t>0&&Math.hypot(b.x-P.x,b.y-P.y)<0.35&&P.inv<=0&&!P.hidden&&!P.vent){b.t=0;hurtPlayer(1);}}
+  if(b.t>0&&Math.hypot(b.x-P.x,b.y-P.y)<0.35&&P.inv<=0&&!P.hidden&&!P.vent){b.t=0;hurtPlayer(1);}
+  if(b.t>0&&Net.on&&Net.host&&!Net.vs&&P2&&P2.here&&!P2.down&&!P2.hidden&&!P2.vent&&(P2.inv||0)<=0&&Math.hypot(b.x-P2.x,b.y-P2.y)<0.35){b.t=0;partnerHurt(1);}}
  G.bullets=G.bullets.filter(b=>b.t>0);
  for(const dd of G.darts){dd.x+=dd.vx*dt;dd.y+=dd.vy*dt;dd.t-=dt;if(opaque(Math.floor(dd.x),Math.floor(dd.y)))dd.t=0;
   for(const g of G.guards){if(dd.t>0&&g.sleep<=0&&Math.hypot(dd.x-g.x,dd.y-g.y)<0.45){dd.t=0;g.hp--;if(g.hp<=0){g.sleep=g.type==='drone'?60:(eqW()==='w_rifle'?90:45);g.hp=GT[g.type].hp;g.sus=0;toast(g.type==='drone'?'ドローンを停止させた':'麻酔が効いた');}else{g.state='search';g.lastP=[P.x,P.y];g.look=4;}}}
@@ -2639,7 +2700,7 @@ function updateGuards(dt){
   if(dd.t>0&&E&&!E.dormant&&Math.hypot(dd.x-E.x,dd.y-E.y)<0.9){dd.t=0;toast('ECHO-01には麻酔が効かない！');}}
  G.darts=G.darts.filter(d=>d.t>0);
 }
-function hurtPlayer(n){if(G.dev&&G.dev.god)return;P.hp=(P.hp==null?4:P.hp)-n;P.inv=1.3;G.shake=9;G.flash=0.35;vib([90,40,90],'hurt',300);S.hurtSpark();
+function hurtPlayer(n){if(P&&P.isP2){partnerHurt(n);return;}if(G.dev&&G.dev.god)return;P.hp=(P.hp==null?4:P.hp)-n;P.inv=1.3;G.shake=9;G.flash=0.35;vib([90,40,90],'hurt',300);S.hurtSpark();
  if(P.hp<=0){if(P.bandage>0){P.bandage--;if(G.kits>0)G.kits--;P.hp=2;toast('救急キットで持ち直した');return;}G.capturedBy='guard';caught();}}
 function nearGuardCQC(){if(!G.guards)return null;for(const g of G.guards){const rod=eqW()==='w_rod';if(g.sleep>0||g.state==='alert'||(!GT[g.type].cqc&&!rod))continue;const d=Math.hypot(g.x-P.x,g.y-P.y);if(d<1.15){const behind=Math.abs(angDiff(g.a,Math.atan2(P.y-g.y,P.x-g.x)))>1.9;if(behind||g.state==='sus'||rod)return {g,d};}}return null;}
 function killCam(c){c.dead=true;const cy=c.y+0.5+(c.dir>0?0.45:-0.45);sparks(c.x+0.5,cy,16,5);S.crash(0.35,0);vib([40,30,60]);toast('監視カメラを壊した');}
@@ -2956,8 +3017,14 @@ function drawShadowRun(dt){const r=G.shadowRun;if(!r)return;r.t+=dt;r.x+=r.vx*dt
 const HT={hound:{spd:1.8,cspd:3.3,rng:4.5,fov:0.75,hear:[2,4],dmg:1,size:1},hound_a:{spd:2.2,cspd:3.6,rng:5,fov:0.85,hear:[2.5,5],dmg:1,size:1.35},bat:{spd:2.4,cspd:3.5,rng:4,fov:1.5,hear:[2,3.5],dmg:1,size:0.8,fly:1}};
 const BOSSNAME={1:'ハウンド',2:'バットクイーン',3:'ハウンドα'};
 const EXITS={2:[10.5,26.5],3:[29.5,16.5],4:[48.5,16.5]};
-const soloFloors=()=>!Net.on;
-function newHunter(type,x,y,boss){return {warn:0,type,x,y,a:rand(0,TAU),st:'patrol',path:null,pi:0,rp:0,stun:0,sleep:0,cd:0,ph:rand(0,6),boss:!!boss,last:null,lostT:0,wait:0,tgt:null,barked:false,flee:0};}
+const soloFloors=()=>!Net.on||(Net.host&&!Net.vs);
+let HID=0,GID=0,REALP=null;
+function p2proxy(){return {isP2:true,x:P2.x,y:P2.y,face:P2.face,moving:P2.moving,sprint:P2.sprint,hidden:P2.hidden,vent:P2.vent,alive:!P2.down,downed:false,camo:0,box:false,locker:P2.lk?1:null,inv:P2.inv||0,bandage:0,hp:P2.hp==null?4:P2.hp};}
+function coopTarget(e){if(!(Net.on&&Net.host&&!Net.vs&&P2&&P2.here&&!P2.down))return P;if(!(P&&P.alive&&!P.downed))return p2proxy();const d1=Math.hypot(P.x-e.x,P.y-e.y),d2=Math.hypot(P2.x-e.x,P2.y-e.y);let k=e.tk;if(k==null)k=d2<d1?2:1;else if(k===1&&d2<d1-2)k=2;else if(k===2&&d1<d2-2)k=1;e.tk=k;return k===2?p2proxy():P;}
+function partnerHurt(n){if(!P2||P2.down||(P2.inv||0)>0)return;P2.hp=(P2.hp==null?4:P2.hp)-n;P2.inv=1.3;netEv('ghit',P2.hp);
+ if(P2.hp<=0){if(P2.role==='medic'&&P2.band>0&&!P2.bandUsed){P2.bandUsed=true;P2.hp=2;P2.inv=3;netEv('gband');return;}
+  if(P.alive&&!P.downed){P2.down=true;toast('相棒が倒れた！ 近づいて助け起こせ');const [v,p]=spat(P2.x,P2.y);S.crash(Math.max(0.3,v),p);}else caught();}}
+function newHunter(type,x,y,boss){return {id:++HID,warn:0,type,x,y,a:rand(0,TAU),st:'patrol',path:null,pi:0,rp:0,stun:0,sleep:0,cd:0,ph:rand(0,6),boss:!!boss,last:null,lostT:0,wait:0,tgt:null,barked:false,flee:0};}
 function setupHunters(n){
  G.hunters=[];G.exit=null;if(!soloFloors()||n>=4)return;const d=G.depth||0,secs=(WIDE&&n===2)?['機関区画','下層区画']:(CH_ZONE[n]||CH_ZONE[3]);
  const sp=(t,b)=>{const p=zoneTile(secs)||spawnEchoAway(10,24);if(p)G.hunters.push(newHunter(t,p[0],p[1],b));};
@@ -2970,14 +3037,14 @@ function setupHunters(n){
 function huntSees(h){if(!playerVisible())return false;const T_=HT[h.type];const dx=P.x-h.x,dy=P.y-h.y,d=Math.hypot(dx,dy);if(d>T_.rng*(h.boss?1.15:1)*(P.sprint?1.2:(P.moving?1:0.6)))return false;if(T_.fov<3&&Math.abs(angDiff(h.a,Math.atan2(dy,dx)))>T_.fov)return false;return los(h.x,h.y,P.x,P.y);}
 function updateHunters(dt){
  if(!G.hunters||!G.hunters.length)return;const dk=[0.85,1,1.12][DIFK()]*(1+(G.depth||0)*0.05);
- for(const h of G.hunters){const T_=HT[h.type];h.ph+=dt;h.cd=Math.max(0,h.cd-dt);
-  if(h.sleep>0){h.sleep-=dt;continue;}if(h.stun>0){h.stun-=dt;continue;}if(h.warn>0){h.warn-=dt;continue;}
+ for(const h of G.hunters){const _sp=P;const _q=coopTarget(h);if(_q!==P)REALP=_sp;P=_q;try{(()=>{const T_=HT[h.type];h.ph+=dt;h.cd=Math.max(0,h.cd-dt);
+  if(h.sleep>0){h.sleep-=dt;return;}if(h.stun>0){h.stun-=dt;return;}if(h.warn>0){h.warn-=dt;return;}
   const d=Math.hypot(P.x-h.x,P.y-h.y);const sees=huntSees(h);
   if(sees){h.last=[P.x,P.y];h.lostT=0;if(h.st!=='chase'){h.st='chase';h.path=null;h.warn=0.8;const [v,p]=spat(h.x,h.y,18);if(h.type==='bat'){S.screech();}else{S.pound(Math.max(0.3,v),p);setTimeout(()=>S.pound(Math.max(0.3,v),p),160);}G.redPulse=Math.max(G.redPulse,0.6);vib([60,40,60],'hunt',800);
-    if(!h.barked){h.barked=true;toast(h.boss?`${BOSSNAME[G.ch]}に見つかった！`:(h.type==='bat'?'コウモリに見つかった！':'ロボット犬に見つかった！'));tip('hunter','ロボット犬やコウモリは閃光弾・トラップ・麻酔銃でひるむ。ロッカーや通気口に逃げ込め');}
+    netEv('hunt',r2(h.x),r2(h.y));if(!h.barked){h.barked=true;toast(h.boss?`${BOSSNAME[G.ch]}に見つかった！`:(h.type==='bat'?'コウモリに見つかった！':'ロボット犬に見つかった！'));tip('hunter','ロボット犬やコウモリは閃光弾・トラップ・麻酔銃でひるむ。ロッカーや通気口に逃げ込め');}
     }}
   else{h.lostT+=dt;if(!P.hidden&&!P.vent&&P.moving&&d<(P.sprint?T_.hear[1]:T_.hear[0])&&h.st!=='chase'){h.st='search';h.last=[P.x,P.y];h.wait=0;}}
-  if(h.flee>0){h.flee-=dt;h.x+=Math.cos(h.a)*T_.cspd*dt*0.8;h.y+=Math.sin(h.a)*T_.cspd*dt*0.8;if(!passE(Math.floor(h.x),Math.floor(h.y))){h.x-=Math.cos(h.a)*T_.cspd*dt*0.8;h.y-=Math.sin(h.a)*T_.cspd*dt*0.8;h.a+=Math.PI*0.7;}continue;}
+  if(h.flee>0){h.flee-=dt;h.x+=Math.cos(h.a)*T_.cspd*dt*0.8;h.y+=Math.sin(h.a)*T_.cspd*dt*0.8;if(!passE(Math.floor(h.x),Math.floor(h.y))){h.x-=Math.cos(h.a)*T_.cspd*dt*0.8;h.y-=Math.sin(h.a)*T_.cspd*dt*0.8;h.a+=Math.PI*0.7;}return;}
   if(h.st==='chase'&&!sees&&d>T_.rng*2){h.st='patrol';h.tgt=null;h.path=null;h.last=null;}
   if(h.st==='chase'&&h.lostT>2.2){h.st='search';h.wait=0;if(h.boss){SAVE.credits+=25;save();updateCredits();toast(`${BOSSNAME[G.ch]||'ボス'}を振り切った！ +25 CREDIT`);S.paper();}}
   if(h.st==='chase'){h.chT=(h.chT||0)+dt;if(h.chT>(h.boss?6.5:5)&&!(h.rest>0)){h.rest=4;h.chT=0;if(!h.tired){h.tired=1;toast('息切れしている！今のうちに離れろ');}}}else h.chT=Math.max(0,(h.chT||0)-dt*2);if(h.rest>0)h.rest-=dt;
@@ -2992,6 +3059,7 @@ function updateHunters(dt){
    if(h.type==='bat'){h.flee=1.6;h.a=a+Math.PI;}else h.stun=1.2;}
   // traps
   for(const t of G.traps||[])if(!t.used&&t.arm<=0&&Math.hypot(h.x-t.x,h.y-t.y)<0.8){t.used=true;h.stun=6;sparks(t.x,t.y,14,5);toast('トラップ作動！');}
+  })();}finally{P=_sp;REALP=null;}
  }
  G.hunters=G.hunters.filter(h=>!h.dead);
 }
@@ -3015,7 +3083,7 @@ function drawHunters(inView){
   if(dz&&h.sleep>0){ctx.fillStyle='rgba(200,220,255,.8)';ctx.font='700 11px sans-serif';ctx.fillText('Zz',X+8,Y-12);}}
 }
 function setExit(n){if(G.exit)return;const p=EXITS[n];G.exit={n,x:p[0],y:p[1]};S.breaker();vib([40,40,80]);radio(n===4?'機密ファイルを確認した。最下層B4Fへの階段が開いた。――そこにECHO-01がいる。':`目的達成。B${n}Fへの階段が開いた。地図の印へ向かえ。`);tip('stairs','下の階への階段は、地図と画面端の矢印が示している');}
-function exitTick(){if(!G.exit||!P||P.vent)return;if(Math.hypot(P.x-G.exit.x,P.y-G.exit.y)<0.9){const n=G.exit.n;G.exit=null;G.blackout=1.3;S.shutter(true,0.8,0);S.subEngine();vib([80,60,160],'stair',1500);if(n===4)schedule(1.2,()=>{S.screech();S.siren();G.shake=16;G.flick=1;vib([300,100,300],'b4',2000);toast('最下層……何かが、待っている');});advanceChapter(n);}}
+function exitTick(){if(!G.exit||!P)return;let _hit=!P.vent&&Math.hypot(P.x-G.exit.x,P.y-G.exit.y)<0.9;if(!_hit&&Net.on&&Net.host&&P2&&P2.here&&!P2.down&&!P2.vent&&Math.hypot(P2.x-G.exit.x,P2.y-G.exit.y)<0.9)_hit=true;if(_hit){const n=G.exit.n;G.exit=null;G.blackout=1.3;S.shutter(true,0.8,0);S.subEngine();vib([80,60,160],'stair',1500);if(n===4)schedule(1.2,()=>{S.screech();S.siren();G.shake=16;G.flick=1;vib([300,100,300],'b4',2000);toast('最下層……何かが、待っている');});advanceChapter(n);}}
 function drawExit(){const e=G.exit;if(!e)return;const X=e.x*T,Y=e.y*T,pl=0.6+0.4*Math.sin(G.t*4);ctx.fillStyle='#0a0f0c';ctx.fillRect(X-T*0.45,Y-T*0.45,T*0.9,T*0.9);ctx.strokeStyle=`rgba(80,220,120,${pl})`;ctx.lineWidth=3;ctx.strokeRect(X-T*0.45,Y-T*0.45,T*0.9,T*0.9);ctx.fillStyle=`rgba(80,220,120,${pl})`;ctx.beginPath();ctx.moveTo(X-9,Y-6);ctx.lineTo(X+9,Y-6);ctx.lineTo(X,Y+9);ctx.closePath();ctx.fill();ctx.font='700 11px "Zen Kaku Gothic New",sans-serif';ctx.textAlign='center';ctx.fillText(`B${e.n}Fへ`,X,Y-T*0.55);ctx.textAlign='left';ctx.save();ctx.globalCompositeOperation='lighter';glow(ctx,'green',X,Y,T*0.9,0.4*pl);ctx.restore();}
 
 // ================= escape: new hazards & head-on ECHO boss =================
@@ -3058,7 +3126,7 @@ function drawSprFit(c,k,X,Y,W,H,pad){const im=TXI[k];const s=Math.min(W/im.natur
 
 // ================= new enemies: parasite spider, rolling spike (land); ray void, snake eel (sea) =================
 HT.spider={spd:2.2,cspd:3.6,rng:4,fov:0.9,hear:[2,3.5],dmg:1,size:0.8};
-function setupSpikes(n){G.spikes=[];if(!soloFloors()||n<2||n>=4)return;const secs=(WIDE&&n===2)?['機関区画','下層区画']:(CH_ZONE[n]||CH_ZONE[3]);
+function setupSpikes(n){G.spikes=[];if(!soloFloors()||Net.on||n<2||n>=4)return;const secs=(WIDE&&n===2)?['機関区画','下層区画']:(CH_ZONE[n]||CH_ZONE[3]);
  for(let i=0;i<(n===3?2:1);i++){const p=zoneTile(secs);if(!p)continue;const ax=Math.random()<0.5;G.spikes.push({x:p[0],y:p[1],vx:ax?3.2:0,vy:ax?0:3.2,rot:0,cd:0});}}
 function updateSpikes(dt){for(const k of G.spikes||[]){k.cd=Math.max(0,k.cd-dt);const nx=k.x+k.vx*dt,ny=k.y+k.vy*dt;const lx=Math.floor(nx+Math.sign(k.vx)*0.35),ly=Math.floor(ny+Math.sign(k.vy)*0.35);
  if(!passE(lx,ly)||tile(lx,ly)===OBST){k.vx=-k.vx;k.vy=-k.vy;const [v,p]=spat(k.x,k.y,12);if(v>0.05)S.clank(v*0.8,p,true);}else{k.x=nx;k.y=ny;}k.rot+=(Math.abs(k.vx)+Math.abs(k.vy))*dt*1.6;
