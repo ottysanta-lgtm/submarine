@@ -322,7 +322,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 2.7（脱出シーンのECHO修正）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 2.8（BGM・脱出シーン修正）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -650,7 +650,7 @@ const Snd=(()=>{
  function tick8(m,t){const g=G_(0,chaseG);AD(g,t,0.002,0.035,0.08);send(g,dly,0.5);O_('square',mtof(m),t,0.1,F_('lowpass',2500,1,g));}
  function setChase(on){
   if(!ac)return;const t=ac.currentTime;
-  if(on&&!chaseOn){chaseOn=true;chaseStep=0;chaseNext=t+0.05;chaseTimer=setInterval(chaseTick,25);chaseG.gain.cancelScheduledValues(t);chaseG.gain.setTargetAtTime(0.9,t,0.15);droneG.gain.setTargetAtTime(0.05,t,0.5);}
+  if(on&&!chaseOn){chaseOn=true;chaseStep=0;chaseNext=t+0.05;if(!chaseTimer)chaseTimer=setInterval(chaseTick,25);chaseG.gain.cancelScheduledValues(t);chaseG.gain.setTargetAtTime(0.9,t,0.15);droneG.gain.setTargetAtTime(0.05,t,0.5);}
   else if(!on&&chaseOn){chaseOn=false;chaseG.gain.cancelScheduledValues(t);chaseG.gain.setTargetAtTime(0,t,0.9);droneG.gain.setTargetAtTime(0.14,t,1.5);setTimeout(()=>{if(!chaseOn&&chaseTimer){clearInterval(chaseTimer);chaseTimer=null;}},4000);}
  }
  function spatial(vol,pan){const g=ac.createGain();g.gain.value=vol;g.connect(panNode(pan,bus));return g;}
@@ -1531,7 +1531,7 @@ function update(dt){
   if(G.freezeT>0){G.freezeT-=dt;}else if(Net.on&&!Net.host)guestUpdate(dt);else{updatePlayer(dt);updateEcho(dt);updateExtras(dt);updateGuards(dt);shadowTick(dt);if(!(Net.on&&Net.vs&&!Net.host))tipsTick(dt);updateBoss(dt);updateOutage(dt);updateGimmicks(dt);if(Net.on&&P.downed&&!(P2&&P2.here&&!P2.down))caught();}
   partnerTick(dt);
   if(P.locker&&G.lockChase&&E&&E.state!=='chase'&&!E.rip){G.lockChase=false;badge('locker');}
-  const chasing=E.state==='chase'||!!E.lunge;Snd.setChase(chasing||G.unlocked&&E.state==='search'||G.phase==='alert'||G.phase==='evasion');
+  const chasing=E.state==='chase'||!!E.lunge;{const want=chasing||G.unlocked&&E.state==='search'||G.phase==='alert'||G.phase==='evasion';if(want)G.chaseHold=2.5;else G.chaseHold=Math.max(0,(G.chaseHold||0)-dt);Snd.setChase(G.chaseHold>0);}
   const d=Math.hypot(E.x-P.x,E.y-P.y);
   const vsG=Net.on&&Net.vs&&!Net.host;
   if(!vsG&&!chasing&&!E.dormant&&d<9){G.flick=Math.max(G.flick,(9-d)/9);G.staticT=(G.staticT||0)-dt;if(d<7&&G.staticT<=0){G.staticT=rand(4,7);S.staticBurst();}}
