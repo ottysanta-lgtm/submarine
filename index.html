@@ -322,7 +322,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 2.5（ヒント・難易度・歩行・軽量化）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 2.6（恐怖演出強化）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -1016,7 +1016,8 @@ function updateEcho(dt){
   case 'idle':{e.idleT-=dt;e.ang+=Math.sin(e.t*0.7)*dt*0.4;if(e.idleT<=0)setEchoState('patrol');break;}
   case 'patrol':{
    if(!e.target||(!e.path&&e.wait<=0)){e.target=randomRoomTarget();e.path=null;}
-   if(e.wait>0){e.wait-=dt;e.ang+=Math.sin(e.t*1.3)*dt*1.2;break;}
+   if(e.wait>0){e.wait-=dt;e.ang+=Math.sin(e.t*(e.listen?4:1.3))*dt*(e.listen?2.5:1.2);if(e.wait<=0)e.listen=false;break;}
+   if(!e.listen&&P&&Math.hypot(P.x-e.x,P.y-e.y)<8&&Math.random()<dt*0.35){e.listen=true;e.wait=rand(1.4,2.4);e.path=null;const [v,p]=spat(e.x,e.y);S.servo(Math.max(0.3,v),p);G.flick=Math.max(G.flick,0.6);break;}
    moveTo=e.target;speed=1.9+D().spd*0.5;
    if(G.unlocked){e.huntT-=dt;if(e.huntT<=0){e.huntT=10;e.target=[P.x,P.y];e.path=null;}}
    break;}
@@ -1198,7 +1199,7 @@ function doAction(){
  }
 }
 function resolvePlayerFromShutter(s){if(Math.floor(P.x)===s.x&&Math.floor(P.y)===s.y){pushPlayer(0,0.5);}}
-function useSkill(){if(Net.on&&!Net.host&&Net.vs){if(G.state!=='play'||(G.sirenCD||0)>0||G.vsHoldL>0)return;G.sirenCD=10;Net.sseq=(Net.sseq||0)+1;S.siren();return;}
+function useSkill(){if(Net.on&&!Net.host&&Net.vs){if(G.state!=='play'||(G.sirenCD||0)>0||G.vsHoldL>0)return;G.sirenCD=10;G.revealT=3;Net.sseq=(Net.sseq||0)+1;S.siren();toast('サイレン！ 主人公の位置が3秒見える');return;}
  if(G.state!=='play'||G.paused||!P.alive||P.vent||P.zip||P.downT>0)return;
  switch(role.id){
   case 'agent':{if(P.shells<=0){S.deny();toast('弾切れ');return;}if(P.shotCD>0)return;P.shells--;P.shotCD=1.1;P.muzzle=0.12;S.shotgun();G.shake=Math.max(G.shake,7);G.flash=0.25;
@@ -1518,6 +1519,7 @@ function toLobby(){if(Net.on)netLeave();clearRadio();$('story').hidden=true;$('r
 
 // ================= update =================
 function update(dt){
+ if(G.slowT>0){G.slowT-=dt;dt*=0.3;}
  G.t+=dt;
  if(G.state==='shoot'){updateShoot(dt);G.redPulse=Math.max(0,G.redPulse-dt*1.4);G.flash=Math.max(0,G.flash-dt*1.6);return;}
  if(G.tq&&G.tq.length&&G.state==='play'){for(const q of G.tq)q.t-=dt;const due=G.tq.filter(q=>q.t<=0);G.tq=G.tq.filter(q=>q.t>0);due.forEach(q=>q.fn());}
@@ -1526,7 +1528,7 @@ function update(dt){
  for(const g of gates)g.anim=lerp(g.anim,g.open?1:0,Math.min(1,dt*2.5));
  if(G.state==='play'){
   G.runT+=dt;
-  if(G.freezeT>0){G.freezeT-=dt;}else if(Net.on&&!Net.host)guestUpdate(dt);else{updatePlayer(dt);updateEcho(dt);updateExtras(dt);updateGuards(dt);if(!(Net.on&&Net.vs&&!Net.host))tipsTick(dt);updateBoss(dt);updateOutage(dt);updateGimmicks(dt);if(Net.on&&P.downed&&!(P2&&P2.here&&!P2.down))caught();}
+  if(G.freezeT>0){G.freezeT-=dt;}else if(Net.on&&!Net.host)guestUpdate(dt);else{updatePlayer(dt);updateEcho(dt);updateExtras(dt);updateGuards(dt);shadowTick(dt);if(!(Net.on&&Net.vs&&!Net.host))tipsTick(dt);updateBoss(dt);updateOutage(dt);updateGimmicks(dt);if(Net.on&&P.downed&&!(P2&&P2.here&&!P2.down))caught();}
   partnerTick(dt);
   if(P.locker&&G.lockChase&&E&&E.state!=='chase'&&!E.rip){G.lockChase=false;badge('locker');}
   const chasing=E.state==='chase'||!!E.lunge;Snd.setChase(chasing||G.unlocked&&E.state==='search'||G.phase==='alert'||G.phase==='evasion');
@@ -1599,7 +1601,7 @@ function render(){
  for(const p of parts){const a=p.life/p.max;if(p.t==='dust'){ctx.fillStyle=`rgba(${p.col},${a*0.5})`;ctx.beginPath();ctx.arc(p.x*T,p.y*T,p.s*T*(1.5-a*0.5),0,TAU);ctx.fill();}}
  // player & echo (sort by y)
  const echoVis=E&&((Net.on&&P2&&P2.here&&!P2.hidden&&Math.hypot(E.x-P2.x,E.y-P2.y)<8.5&&los(P2.x,P2.y,E.x,E.y))||los(P.x,P.y,E.x,E.y));
- const drawP=()=>{if(Net.on&&P2&&P2.here&&!P2.hidden&&!P2.vent&&(!Net.vs||(!Net.host&&los(P.x,P.y,P2.x,P2.y)&&Math.hypot(P2.x-P.x,P2.y-P.y)<9.5)))drawPartner();if(!P.hidden&&G.state!=='caught')drawPlayer();};
+ const drawP=()=>{if(Net.on&&P2&&P2.here&&!P2.hidden&&!P2.vent&&(!Net.vs||(!Net.host&&((G.revealT>0)||(los(P.x,P.y,P2.x,P2.y)&&Math.hypot(P2.x-P.x,P2.y-P.y)<9.5)))))drawPartner();if(!P.hidden&&G.state!=='caught')drawPlayer();};
  if(E&&echoVis&&E.y<P.y){drawEcho();drawP();}else{drawP();if(E&&echoVis)drawEcho();}
  for(const p of parts){const a=p.life/p.max;if(p.t==='steam'){ctx.fillStyle=`rgba(200,210,215,${a*0.12})`;ctx.beginPath();ctx.arc(p.x*T,p.y*T,p.s*T,0,TAU);ctx.fill();}else if(p.t==='bub'){ctx.strokeStyle=`rgba(200,240,255,${a*0.7})`;ctx.lineWidth=1;ctx.beginPath();ctx.arc(p.x*T,p.y*T,p.s*T*(2-a),0,TAU);ctx.stroke();}}
  ctx.restore();
@@ -1641,7 +1643,7 @@ function render(){
  // night vision tint
  if(nv){ctx.globalCompositeOperation='multiply';ctx.fillStyle=(Net.on&&Net.vs&&!Net.host)?'rgb(255,110,100)':'rgb(120,255,150)';ctx.fillRect(0,0,VW,VH);ctx.globalCompositeOperation='source-over';ctx.fillStyle='rgba(40,120,60,.08)';ctx.fillRect(0,0,VW,VH);}
  if(P.locker){const sy1=VH*0.43,sy2=VH*0.57,sh=VH*0.035;ctx.fillStyle='rgba(4,5,6,.93)';ctx.fillRect(0,0,VW,sy1);ctx.fillRect(0,sy1+sh,VW,sy2-sy1-sh);ctx.fillRect(0,sy2+sh,VW,VH-sy2-sh);ctx.fillRect(0,sy1,VW*0.18,sh);ctx.fillRect(VW*0.82,sy1,VW*0.18,sh);ctx.fillRect(0,sy2,VW*0.18,sh);ctx.fillRect(VW*0.82,sy2,VW*0.18,sh);ctx.strokeStyle='rgba(120,130,135,.55)';ctx.lineWidth=2;ctx.strokeRect(VW*0.18,sy1,VW*0.64,sh);ctx.strokeRect(VW*0.18,sy2,VW*0.64,sh);ctx.fillStyle='rgba(217,214,204,.5)';ctx.font='700 13px "Zen Kaku Gothic New",sans-serif';ctx.textAlign='center';ctx.fillText('ロッカーの中……息を殺せ',VW/2,VH*0.72);ctx.textAlign='left';}
- drawThreat(typeof echoVis!=='undefined'?echoVis:false);drawObjArrow(cx,cy);drawSpot();drawBossHUD();
+ drawShadowRun(1/60);drawThreat(typeof echoVis!=='undefined'?echoVis:false);drawObjArrow(cx,cy);drawSpot();drawBossHUD();
  if(P.downed){const rg=ctx.createRadialGradient(VW/2,VH/2,VH*0.2,VW/2,VH/2,VH*0.8);rg.addColorStop(0,'rgba(120,0,0,.15)');rg.addColorStop(1,'rgba(120,0,0,.75)');ctx.fillStyle=rg;ctx.fillRect(0,0,VW,VH);ctx.fillStyle='rgba(255,230,220,.8)';ctx.font='900 18px "Zen Kaku Gothic New",sans-serif';ctx.textAlign='center';ctx.fillText('捕まった……相棒が助けに来るのを待て',VW/2,VH*0.7);ctx.textAlign='left';}
  // grain
  ctx.save();ctx.globalCompositeOperation='overlay';ctx.globalAlpha=0.16;ctx.fillStyle=grainPat;ctx.translate(-rand(0,160),-rand(0,160));ctx.fillRect(0,0,VW+160,VH+160);ctx.restore();
@@ -1867,7 +1869,7 @@ addEventListener('pointerdown',()=>Snd.init(),{once:true});addEventListener('key
 
 // ================= visual horror fx =================
 const FXI={};for(const k of ['omega','omega_head','omega_top','omega_side','photo','bp1','experiment','voice']){const im=new Image();im.src=IMG[k]||'';FXI[k]=im;}
-function spotFlash(a=0.38){vib([80,40,160],'spot',800);if(!G.spotted||a>0.4){G.spotted=true;G.spot=Math.max(G.spot||0,a);}}
+function spotFlash(a=0.38){vib([80,40,160],'spot',800);if(!G.spotted&&!(Net.on&&Net.vs))G.slowT=0.35;if(!G.spotted||a>0.4){G.spotted=true;G.spot=Math.max(G.spot||0,a);}}
 function drawGlitchImage(im,cx,cy,sc,alpha,slices,jit,ay=0.62){
  if(!im.complete||!im.naturalWidth)return;
  const iw=im.naturalWidth,ih=im.naturalHeight,w=iw*sc,h=ih*sc;const x0=cx-w*0.5,y0=cy-h*ay;
@@ -2803,7 +2805,7 @@ function vsInput(){
 }
 function vsGuestFrame(dt){
  if(!E)return;P.x=E.x;P.y=E.y;P.face=E.ang;P.hidden=true;P.nvT=1;P.alive=true;
- G.vsHoldL=Math.max(0,(G.vsHoldL||0)-dt);G.sirenCD=Math.max(0,(G.sirenCD||0)-dt);vsInput();
+ G.vsHoldL=Math.max(0,(G.vsHoldL||0)-dt);G.revealT=Math.max(0,(G.revealT||0)-dt);G.sirenCD=Math.max(0,(G.sirenCD||0)-dt);vsInput();
  if(P2&&P2.here&&!P2.vent&&!P2.hidden){const d=Math.hypot(P2.x-P.x,P2.y-P.y);G.ripT=(G.ripT||0)-dt;
   if(P2.spd>0.4&&G.ripT<=0&&d<(P2.sprint?17:6.5)){G.ripT=P2.sprint?0.3:0.8;(G.rip=G.rip||[]).push({x:P2.x+rand(-0.7,0.7),y:P2.y+rand(-0.7,0.7),t:1.4});}}
  for(const r of G.rip||[])r.t-=dt;G.rip=(G.rip||[]).filter(r=>r.t>0);
@@ -2836,6 +2838,13 @@ function tipsTick(dt){
 }
 function diffUI(){const k=DIFK();['dfE','dfN','dfH'].forEach((id,i)=>$(id).classList.toggle('sel',i===k));}
 function qualityCheck(dt){if(G.state!=='play'||G.qDone)return;G.qN=(G.qN||0)+1;G.qT=(G.qT||0)+dt;if(G.qN>=150){G.qDone=true;if(G.qT/G.qN>1/40&&!LOWQ){LOWQ=true;resize();toast('動作を軽くするため画質を調整しました');}}}
+
+// ================= fear pacing: slow-mo, shadow runner, listening =================
+function shadowTick(dt){
+ if(G.ch<2||!E||E.dormant||E.state==='chase'||G.phase==='alert')return;G.shadowNext=(G.shadowNext==null?rand(35,60):G.shadowNext)-dt;
+ if(G.shadowNext<=0&&!G.shadowRun){G.shadowNext=rand(55,95);const side=Math.random()<0.5?-1:1;const y=VH*rand(0.25,0.75);G.shadowRun={x:side<0?-60:VW+60,y,vx:-side*VW*1.6,t:0};S.servo(0.9,side<0?-0.9:0.9);setTimeout(()=>S.clank(0.5,side<0?-0.7:0.7,true),120);vib([40,30,40],'sh',1000);}
+}
+function drawShadowRun(dt){const r=G.shadowRun;if(!r)return;r.t+=dt;r.x+=r.vx*dt;ctx.save();ctx.globalAlpha=0.75;const g=ctx.createRadialGradient(r.x,r.y,4,r.x,r.y,70);g.addColorStop(0,'rgba(0,0,0,.95)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(r.x-80,r.y-80,160,160);ctx.globalCompositeOperation='lighter';glow(ctx,'red',r.x+(r.vx>0?20:-20),r.y-6,14,0.9);ctx.restore();if(r.t>0.8)G.shadowRun=null;}
 
 // ================= loop =================
 let last=performance.now();
