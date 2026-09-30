@@ -321,7 +321,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.86（新フロア追加）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.87（新フロア追加）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -393,7 +393,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
 
 <div id="pause" class="overlay" hidden><div class="card"><h3>PAUSE</h3><div class="col"><button class="bigbtn" id="resumeBtn">再開する</button><button class="muteBtn">サウンド オン</button><button class="muteBtn" id="brBtn">明るさ：明るい</button><button class="muteBtn" id="vibBtn">振動 オン</button><button class="ghost" id="quitBtn">ロビーへ戻る</button></div></div></div>
 
-<div id="bigmap" class="overlay" hidden><canvas id="bigCanvas"></canvas><p><span><i style="background:#fff;border-radius:50%"></i>自分</span><span><i style="background:#5ae6ff"></i>通気口</span><span><i style="background:#e0a030"></i>シャッター / ジップライン</span><span><i style="background:#ff5040"></i>破損・封鎖</span><span>タップで閉じる</span></p></div>
+<div id="bigmap" class="overlay" hidden><canvas id="bigCanvas"></canvas><p><span><i style="background:#fff;border-radius:50%"></i>自分</span><span><i style="background:#5ae6ff"></i>通気口</span><span><i style="background:#e0a030"></i>シャッター / ジップライン</span><span><i style="background:#ff5040"></i>破損・封鎖</span><span><i style="background:#ff8a30;transform:rotate(45deg)"></i>犬・コウモリ</span><span><i style="background:#d8d060;border-radius:50%"></i>トゲ鉄球</span><span><i style="background:#60e0ff"></i>アイテム</span><span>タップで閉じる</span></p></div>
 
 <div id="docView" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="docTitle">
  <div class="doc">
@@ -993,7 +993,7 @@ function seesP(P){
  const dx=P.x-E.x,dy=P.y-E.y,d=Math.hypot(dx,dy);
  const range=(E.od?Math.max(11,D().vis):D().vis)*(LX().ev||1);if(d>range)return false;
  const ad=Math.abs(angDiff(E.ang,Math.atan2(dy,dx)));
- if(d>2.3&&ad>1.35)return false;
+ if(ad>1.35)return false;
  const hx=E.x+Math.cos(E.ang)*0.6,hy=E.y+Math.sin(E.ang)*0.6;
  return los(hx,hy,P.x,P.y)||los(E.x,E.y,P.x,P.y);
 }
@@ -1331,6 +1331,9 @@ function drawMini(target,s,big){
  for(const g of G.guards||[])if(g.seen&&!(g.sleep>0)){c.fillStyle=g.state==='alert'?'#ff3020':'#ffb040';c.strokeStyle=c.fillStyle;c.lineWidth=Math.max(1,s*0.3);c.beginPath();c.arc(g.x*s,g.y*s,Math.max(1.8,s*0.5),0,TAU);c.fill();c.beginPath();c.moveTo(g.x*s,g.y*s);c.lineTo((g.x+Math.cos(g.a)*1.8)*s,(g.y+Math.sin(g.a)*1.8)*s);c.stroke();}
  for(const q of G.cams||[])if(q.seen){c.fillStyle=q.dead?'#555':'#ff6040';c.fillRect(q.x*s,q.y*s,s,s);}
  for(const q of G.crawl||[])if(q.seen){c.fillStyle='#ff9060';c.beginPath();c.arc(q.x*s,q.y*s,Math.max(1.4,s*0.35),0,TAU);c.fill();}
+ for(const h of G.hunters||[])if(h.seen&&!h.dead){const r=Math.max(2.4,s*(h.boss?0.95:0.7)),x=h.x*s,y=h.y*s;c.fillStyle=(h.sleep>0||h.stun>0)?'#8a8f95':h.st==='chase'?'#ff3020':'#ff8a30';c.strokeStyle='#000';c.lineWidth=1;c.beginPath();c.moveTo(x,y-r);c.lineTo(x+r,y);c.lineTo(x,y+r);c.lineTo(x-r,y);c.closePath();c.fill();c.stroke();}
+ for(const k of G.spikes||[])if(k.seen){const r=Math.max(2,s*0.55);c.fillStyle='#d8d060';c.beginPath();c.arc(k.x*s,k.y*s,r,0,TAU);c.fill();c.strokeStyle='#000';c.lineWidth=1;c.stroke();}
+ for(const k of G.pickups||[])if(k.seen&&!k.got){c.fillStyle='#60e0ff';const r=Math.max(2,s*0.5);c.fillRect(k.x*s-r,k.y*s-r,r*2,r*2);}
  drawObjMini(c,s);
  if(Net.on&&!Net.vs&&P2&&P2.here){c.fillStyle=(P2.down||P2.downed)?'#ff5040':'#50d080';c.beginPath();c.arc(P2.x*s,P2.y*s,Math.max(2.2,s*0.6),0,TAU);c.fill();}
  if(P){const px=P.x*s,py=P.y*s;c.fillStyle=P.vent?'rgba(255,255,255,.5)':'#fff';c.beginPath();c.arc(px,py,Math.max(2.2,s*0.6),0,TAU);c.fill();c.strokeStyle='#fff';c.lineWidth=Math.max(1,s*0.3);c.beginPath();c.moveTo(px,py);c.lineTo(px+Math.cos(P.face)*s*1.4,py+Math.sin(P.face)*s*1.4);c.stroke();}
@@ -1576,7 +1579,12 @@ function update(dt){
  for(const p of parts){p.life-=dt;if(p.life<=0){p.dead=true;continue;}if(p.t==='steam'){p.x+=p.vx*dt;p.y+=p.vy*dt;p.s+=dt*0.4;}else{const k=Math.exp(-(p.t==='spk'?3:2)*dt);p.vx*=k;p.vy*=k;p.x+=p.vx*dt;p.y+=p.vy*dt;}}
  {let j=0;for(const p of parts)if(!p.dead)parts[j++]=p;parts.length=j;}
  G.shake=Math.max(0,G.shake-dt*30);G.flash=Math.max(0,G.flash-dt*1.6);G.redPulse=Math.max(0,G.redPulse-dt*1.4);if(G.whiteT>0)G.whiteT=Math.max(0,G.whiteT-dt);
+ markSeen();
 }
+function markSeen(){if(!P||G.state!=='play')return;const near=(o)=>Math.hypot(o.x-P.x,o.y-P.y)<8.5&&los(P.x,P.y,o.x,o.y);
+ for(const h of G.hunters||[])if(!h.seen&&near(h))h.seen=true;
+ for(const k of G.spikes||[])if(!k.seen&&near(k))k.seen=true;
+ for(const k of G.pickups||[])if(!k.seen&&near(k))k.seen=true;}
 
 // ================= render =================
 let visPts=[];
@@ -2625,7 +2633,7 @@ function drawItemIcon(c,k,x,y,s,col){
 }
 function newBag2(b){const r=Object.assign({dart:6+upLv('kit')*2,emp:0,chaff:0,box:0,camo:0},b);if(!(r[r.sel]>0))r.sel='dart';return r;}
 // ---- guards ----
-const GT={guard:{hp:1,spd:1.3,aspd:2.9,rng:5.5,fov:0.62,cqc:true,col:'#3b4a58'},heavy:{hp:2,spd:1.0,aspd:2.4,rng:6.5,fov:0.45,cqc:false,col:'#5a4a3a'},drone:{hp:1,spd:1.6,aspd:3.2,rng:3.6,fov:3.2,cqc:false,col:'#6a7076'}};
+const GT={guard:{hp:1,spd:1.3,aspd:2.9,rng:5.5,fov:0.62,cqc:true,col:'#3b4a58'},heavy:{hp:2,spd:1.0,aspd:2.4,rng:6.5,fov:0.45,cqc:false,col:'#5a4a3a'},drone:{hp:1,spd:1.6,aspd:3.2,rng:3.6,fov:1.0,cqc:false,col:'#6a7076'}};
 const CH_ZONE={1:['居住区','管制区画'],2:['機関区画'],3:['研究区画'],4:['研究区画','最終脱出区画']};
 function zoneTile(secs){for(let k=0;k<80;k++){const r=ROOMS[Math.floor(Math.random()*ROOMS.length)];if(!secs.includes(r.sec)&&!(r.id==='main'&&Math.random()<0.4))continue;const x=r.x+Math.floor(Math.random()*r.w),y=r.y+Math.floor(Math.random()*r.h);if(tile(x,y)===FLOOR&&Math.hypot(x-P.x,y-P.y)>9)return [x+0.5,y+0.5];}return null;}
 function newGuard(type,pos,secs){const route=[pos];for(let i=0;i<3;i++){const q=zoneTile(secs);if(q)route.push(q);}return {id:++GID,type,x:pos[0],y:pos[1],a:rand(0,TAU),route,ri:1,state:'patrol',sus:0,hp:GT[type].hp,wait:rand(0,2),path:null,pi:0,rp:0,fireT:1,seen:false,sleep:0,look:0,ph:rand(0,6),secs};}
@@ -3014,7 +3022,7 @@ function shadowTick(dt){
 function drawShadowRun(dt){const r=G.shadowRun;if(!r)return;r.t+=dt;r.x+=r.vx*dt;ctx.save();ctx.globalAlpha=0.75;const g=ctx.createRadialGradient(r.x,r.y,4,r.x,r.y,70);g.addColorStop(0,'rgba(0,0,0,.95)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(r.x-80,r.y-80,160,160);ctx.globalCompositeOperation='lighter';glow(ctx,'red',r.x+(r.vx>0?20:-20),r.y-6,14,0.9);ctx.restore();if(r.t>0.8)G.shadowRun=null;}
 
 // ================= FLOORS & HUNTERS (robot dogs, bats) =================
-const HT={hound:{spd:1.8,cspd:3.3,rng:4.5,fov:0.75,hear:[2,4],dmg:1,size:1},hound_a:{spd:2.2,cspd:3.6,rng:5,fov:0.85,hear:[2.5,5],dmg:1,size:1.35},bat:{spd:2.4,cspd:3.5,rng:4,fov:1.5,hear:[2,3.5],dmg:1,size:0.8,fly:1}};
+const HT={hound:{spd:1.8,cspd:3.3,rng:4.5,fov:0.75,hear:[2,4],dmg:1,size:1},hound_a:{spd:2.2,cspd:3.6,rng:5,fov:0.85,hear:[2.5,5],dmg:1,size:1.35},bat:{spd:2.4,cspd:3.5,rng:4,fov:0.95,hear:[2,3.5],dmg:1,size:0.8,fly:1}};
 const BOSSNAME={1:'ハウンド',2:'バットクイーン',3:'ハウンドα'};
 const EXITS={2:[10.5,26.5],3:[29.5,16.5],4:[48.5,16.5]};
 const soloFloors=()=>!Net.on||(Net.host&&!Net.vs);
