@@ -322,7 +322,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.4（フロア制・脱出ボス戦・新アート）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.5（シャッター絵・ボス逃げ切り報酬）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -1682,6 +1682,7 @@ function drawDock(){
 }
 function drawShutter(s){
  const X=s.x*T,Y=s.y*T,a=s.anim,shake=s.pound>0?rand(-1.5,1.5):0;
+ if(typeof txOk==='function'&&txOk('sp_shut')&&!s.broken){if(a<0.03)return;ctx.save();ctx.translate(shake,0);ctx.beginPath();ctx.rect(X-4,Y-6,T+8,(T+10)*a);ctx.clip();ctx.drawImage(TXI.sp_shut,X-4,Y-6,T+8,T+10);ctx.restore();if(s.pound>0){ctx.fillStyle=`rgba(255,80,40,${s.pound*0.3})`;ctx.fillRect(X,Y,T,T);}return;}
  ctx.save();ctx.translate(shake,0);
  if(s.horiz){
   ctx.fillStyle='#2a3036';ctx.fillRect(X-2,Y+T*0.3,4,T*0.4);ctx.fillRect(X+T-2,Y+T*0.3,4,T*0.4);
@@ -2891,7 +2892,7 @@ function updateHunters(dt){
     if(G.guards&&G.guards.length&&G.phase==='normal')setPhase('caution');}}
   else{h.lostT+=dt;if(!P.hidden&&!P.vent&&P.moving&&d<(P.sprint?T_.hear[1]:T_.hear[0])&&h.st!=='chase'){h.st='search';h.last=[P.x,P.y];h.wait=0;}}
   if(h.flee>0){h.flee-=dt;h.x+=Math.cos(h.a)*T_.cspd*dt*0.8;h.y+=Math.sin(h.a)*T_.cspd*dt*0.8;if(!passE(Math.floor(h.x),Math.floor(h.y))){h.x-=Math.cos(h.a)*T_.cspd*dt*0.8;h.y-=Math.sin(h.a)*T_.cspd*dt*0.8;h.a+=Math.PI*0.7;}continue;}
-  if(h.st==='chase'&&h.lostT>3){h.st='search';h.wait=0;}
+  if(h.st==='chase'&&h.lostT>3){h.st='search';h.wait=0;if(h.boss){SAVE.credits+=25;save();updateCredits();toast(`${BOSSNAME[G.ch]||'ボス'}を振り切った！ +25 CREDIT`);S.paper();}}
   let tgt=null,sp=T_.spd;
   if(h.st==='chase'){tgt=h.last;sp=T_.cspd*dk;if(sees&&d<1.2)tgt=[P.x,P.y];}
   else if(h.st==='search'){tgt=h.last;sp=T_.spd*1.5*dk;if(tgt&&Math.hypot(tgt[0]-h.x,tgt[1]-h.y)<0.7){h.wait+=dt;h.a+=dt*3;tgt=null;if(h.wait>3){h.st='patrol';h.tgt=null;}}}
@@ -2925,7 +2926,7 @@ function drawHunters(inView){
   if(dz&&h.sleep>0){ctx.fillStyle='rgba(200,220,255,.8)';ctx.font='700 11px sans-serif';ctx.fillText('Zz',X+8,Y-12);}}
 }
 function setExit(n){if(G.exit)return;const p=EXITS[n];G.exit={n,x:p[0],y:p[1]};S.breaker();vib([40,40,80]);radio(n===4?'機密ファイルを確認した。最下層B4Fへの階段が開いた。――そこにECHO-01がいる。':`目的達成。B${n}Fへの階段が開いた。地図の印へ向かえ。`);tip('stairs','下の階への階段は、地図と画面端の矢印が示している');}
-function exitTick(){if(!G.exit||!P||P.vent)return;if(Math.hypot(P.x-G.exit.x,P.y-G.exit.y)<0.9){const n=G.exit.n;G.exit=null;G.blackout=1.3;S.shutter(true,0.8,0);S.subEngine();vib([80,60,160],'stair',1500);advanceChapter(n);}}
+function exitTick(){if(!G.exit||!P||P.vent)return;if(Math.hypot(P.x-G.exit.x,P.y-G.exit.y)<0.9){const n=G.exit.n;G.exit=null;G.blackout=1.3;S.shutter(true,0.8,0);S.subEngine();vib([80,60,160],'stair',1500);if(n===4)schedule(1.2,()=>{S.screech();S.siren();G.shake=16;G.flick=1;vib([300,100,300],'b4',2000);toast('最下層……何かが、待っている');});advanceChapter(n);}}
 function drawExit(){const e=G.exit;if(!e)return;const X=e.x*T,Y=e.y*T,pl=0.6+0.4*Math.sin(G.t*4);ctx.fillStyle='#0a0f0c';ctx.fillRect(X-T*0.45,Y-T*0.45,T*0.9,T*0.9);ctx.strokeStyle=`rgba(80,220,120,${pl})`;ctx.lineWidth=3;ctx.strokeRect(X-T*0.45,Y-T*0.45,T*0.9,T*0.9);ctx.fillStyle=`rgba(80,220,120,${pl})`;ctx.beginPath();ctx.moveTo(X-9,Y-6);ctx.lineTo(X+9,Y-6);ctx.lineTo(X,Y+9);ctx.closePath();ctx.fill();ctx.font='700 11px "Zen Kaku Gothic New",sans-serif';ctx.textAlign='center';ctx.fillText(`B${e.n}Fへ`,X,Y-T*0.55);ctx.textAlign='left';ctx.save();ctx.globalCompositeOperation='lighter';glow(ctx,'green',X,Y,T*0.9,0.4*pl);ctx.restore();}
 
 // ================= escape: new hazards & head-on ECHO boss =================
