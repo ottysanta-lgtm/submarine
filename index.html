@@ -314,14 +314,14 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
   <p class="sub">極秘機械兵器 ECHO-01 を運ぶ巨大潜水艦。その兵器が暴走した。艦内を探索し、情報を集め、ミニサブマリンで脱出せよ。</p>
   <div class="menu">
    <button class="mbtn primary" id="btnStart">出撃する <small>DEPLOY</small></button>
-   <button class="mbtn" id="btnCoop">オンライン協力 <small>CO-OP 2P</small></button>
+   <button class="mbtn" id="btnCoop">オンライン協力・対戦 <small>ONLINE 2P</small></button>
    <button class="mbtn" id="btnArchive">アーカイブ <small>ARCHIVE</small></button>
    <button class="mbtn" id="btnUpg">強化 <small>UPGRADE</small></button>
    <button class="mbtn" id="btnSet">設定 <small>SETTINGS</small></button>
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.83（新フロア追加）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.84（新フロア追加）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -333,14 +333,14 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
 </section>
 
 <section id="coop" class="screen" hidden>
- <div class="head"><h2><small>ONLINE CO-OP</small>オンライン協力（最大2人）</h2><button class="back" id="coopBack">戻る</button></div>
+ <div class="head"><h2><small>ONLINE 2P</small>オンライン協力・対戦</h2><button class="back" id="coopBack">戻る</button></div>
  <div class="scroll">
-  <p class="coopNote">2人で同じ潜水艦に潜入します。ECHO-01はどちらか近い方を狙う。捕まった仲間は、近づいて助け起こせる。<br><b>参加する2人とも claude.ai にサインインし、このゲームを共有（招待）されている必要があります。</b></p>
+  <p class="coopNote"><b>協力：</b>2人で同じ潜水艦に潜入します。捕まった仲間は、近づいて助け起こせます。<br><b>対戦：</b>ホストは主人公、ゲストは追う側のECHO-01になり、脱出されるか捕まえるかで勝負します。<br>ログイン不要です。ホストが作った4文字のコードを、相手が入力すると同じ部屋に入れます。</p>
   <div id="coopJoin" class="coopBox">
-   <div style="font-size:12px;color:var(--dim);line-height:1.7;margin-bottom:10px">ログイン不要。ホストが作った4文字のコードを、相手が入力すれば同じ部屋に入れます。</div>
-   <button class="bigbtn" id="coopCreate">部屋を作る（ホスト）</button>
+   <button class="bigbtn" id="coopCreate" style="width:100%;box-sizing:border-box">協力で部屋を作る</button>
+   <button class="bigbtn" id="coopCreateVs" style="margin-top:8px;width:100%;box-sizing:border-box">対戦で部屋を作る</button>
    <div class="or">または</div>
-   <div class="enter"><input id="coopInput" maxlength="4" placeholder="コード4文字" autocomplete="off" autocapitalize="characters"><button class="ghost" id="coopEnter">参加する</button></div>
+   <div class="enter"><input id="coopInput" maxlength="4" placeholder="コード" autocomplete="off" autocapitalize="characters"><button class="ghost" id="coopEnter">参加する</button></div>
   </div>
   <div id="coopRoom" class="coopBox" hidden>
    <div class="codeLbl">部屋コード</div><div id="coopCode" class="code">----</div>
@@ -1883,7 +1883,7 @@ const dvT=k=>{SAVE.devOpt=SAVE.devOpt||{};SAVE.devOpt[k]=!SAVE.devOpt[k];save();
 $('dvUpg').onclick=()=>{SAVE.upg={stam:3,speed:3,light:3,kit:3,hull:3};save();$('devMsg').textContent='強化をすべて最大にした';};$('dvCred').onclick=()=>{SAVE.credits+=10000;save();updateCredits();$('devMsg').textContent='+10000 CREDIT';};
 $('dvAll').onclick=()=>{SAVE.docs=DOCS.map(d=>d.id);SAVE.badges=BADGES.map(b=>b[0]);SAVE.endings=['true','normal'];SAVE.roles=Object.keys(ROLE_PRICE);save();updateCredits();$('devMsg').textContent='資料・バッジ・エンディングを全解放';};
 document.querySelectorAll('[data-dep]').forEach(b=>b.onclick=()=>{SAVE.escapes=+b.dataset.dep;save();updateCredits();$('devMsg').textContent='潜航深度 '+b.dataset.dep+' に設定';});
-document.querySelectorAll('[data-ch]').forEach(b=>b.onclick=()=>{Snd.init();devJump(+b.dataset.ch);});$('btnUpg').onclick=()=>{Snd.init();S.click();buildUpg();updateCredits();showScreen('upg');};$('coopCreate').onclick=()=>coopCreate();$('cmCoop').onclick=()=>{if(!Net.host)return;Net.vs=false;S.click();updateCoopUI();netSend(true);};$('cmVs').onclick=()=>{if(!Net.host)return;Net.vs=true;S.click();updateCoopUI();netSend(true);};$('coopEnter').onclick=()=>coopEnter();$('coopGo').onclick=()=>{if(Net.on&&Net.host)startGame();};$('coopBack').onclick=()=>{netLeave();S.click();showScreen('lobby');};
+document.querySelectorAll('[data-ch]').forEach(b=>b.onclick=()=>{Snd.init();devJump(+b.dataset.ch);});$('btnUpg').onclick=()=>{Snd.init();S.click();buildUpg();updateCredits();showScreen('upg');};$('coopCreate').onclick=()=>coopCreate(false);$('coopCreateVs').onclick=()=>coopCreate(true);$('cmCoop').onclick=()=>{if(!Net.host)return;Net.vs=false;S.click();updateCoopUI();netSend(true);};$('cmVs').onclick=()=>{if(!Net.host)return;Net.vs=true;S.click();updateCoopUI();netSend(true);};$('coopEnter').onclick=()=>coopEnter();$('coopGo').onclick=()=>{if(Net.on&&Net.host)startGame();};$('coopBack').onclick=()=>{netLeave();S.click();showScreen('lobby');};
 $('resLobby').onclick=()=>toLobby();
 $('pauseBtn').onclick=()=>pauseGame();
 $('resumeBtn').onclick=()=>resumeGame();
@@ -2065,7 +2065,7 @@ function netTick(dt){
   for(const a of pr.acts||[]){if(a[0]<=Net.seenAct)continue;Net.seenAct=a[0];hostApplyAct(a);}
  }else{
   if(pr.go&&pr.go!==Net.seenGo&&(G.state==='lobby'||G.state==='result'||!P)&&G.screen==='coop'){Net.seenGo=pr.go;startGame();}
-  Net.vs=!!pr.vs;if(pr.p)applyRemoteAvatar(pr);
+  if(!!Net.vs!==!!pr.vs){Net.vs=!!pr.vs;updateCoopUI();}if(pr.p)applyRemoteAvatar(pr);
   const s=pr.s;if(s){Net.prevSnap=Net.snap;Net.snap=s;guestApply(s);}
  }
 }
@@ -2168,9 +2168,9 @@ function updateCoopUI(){
 }
 function buildCoopRoles(){const box=$('coopRoles');box.innerHTML='';ROLES.forEach(r=>{const b=document.createElement('button');b.className='rchip'+(r===role?' sel':'');b.style.setProperty('--rc',r.col);b.innerHTML=ICO[r.id]+' '+r.name;b.title=r.desc;b.onclick=()=>{if(!roleOwned(r.id)){S.deny();toast('ショップで購入できます');return;}role=r;S.click();buildCoopRoles();updateCoopUI();netSend(true);};box.appendChild(b);});}
 function openCoop(){Snd.init();S.click();buildCoopRoles();updateCoopUI();$('coopMsg').textContent='';showScreen('coop');}
-async function coopCreate(){
+async function coopCreate(vs){
  $('coopMsg').textContent='接続中…';const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
- const r=await netJoin(code,true);coopResult(r);
+ const r=await netJoin(code,true);if(r==='ok'&&vs){Net.vs=true;netSend(true);}coopResult(r);
 }
 async function coopEnter(){
  const code=($('coopInput').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);if(code.length!==4){$('coopMsg').textContent='4文字のコードを入力してください';return;}
