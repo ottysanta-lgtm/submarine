@@ -321,7 +321,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.84（新フロア追加）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.85（新フロア追加）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -1575,7 +1575,7 @@ function update(dt){
  for(const s of shutters){s.anim=lerp(s.anim,s.closed?1:0,Math.min(1,dt*12));s.pound=Math.max(0,s.pound-dt);}
  for(const p of parts){p.life-=dt;if(p.life<=0){p.dead=true;continue;}if(p.t==='steam'){p.x+=p.vx*dt;p.y+=p.vy*dt;p.s+=dt*0.4;}else{const k=Math.exp(-(p.t==='spk'?3:2)*dt);p.vx*=k;p.vy*=k;p.x+=p.vx*dt;p.y+=p.vy*dt;}}
  {let j=0;for(const p of parts)if(!p.dead)parts[j++]=p;parts.length=j;}
- G.shake=Math.max(0,G.shake-dt*30);G.flash=Math.max(0,G.flash-dt*1.6);G.redPulse=Math.max(0,G.redPulse-dt*1.4);
+ G.shake=Math.max(0,G.shake-dt*30);G.flash=Math.max(0,G.flash-dt*1.6);G.redPulse=Math.max(0,G.redPulse-dt*1.4);if(G.whiteT>0)G.whiteT=Math.max(0,G.whiteT-dt);
 }
 
 // ================= render =================
@@ -1681,6 +1681,8 @@ function render(){
  const vg=ctx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.3,VW/2,VH/2,Math.max(VW,VH)*0.72);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.5)');ctx.fillStyle=vg;ctx.fillRect(0,0,VW,VH);
  if(G.redPulse>0){const rg=ctx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.25,VW/2,VH/2,Math.max(VW,VH)*0.7);rg.addColorStop(0,'rgba(180,0,0,0)');rg.addColorStop(1,`rgba(180,0,0,${G.redPulse*0.45})`);ctx.fillStyle=rg;ctx.fillRect(0,0,VW,VH);}
  if(G.flash>0){ctx.fillStyle=G.state==='caught'?`rgba(120,0,0,${G.flash})`:`rgba(255,240,220,${G.flash*0.5})`;ctx.fillRect(0,0,VW,VH);}
+ if(G.whiteT>0){const a=Math.min(1,G.whiteT/((G.whiteMax||4)*0.5));ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.fillRect(0,0,VW,VH);}
+ {const wv=G.whiteT>0;if(wv!==G._wv){G._wv=wv;$('mini').style.visibility=wv?'hidden':'';}}
  if(G.state==='caught'){drawJumpscare(G.caughtT);}
  if(G.state==='escape'){const k2=clamp((G.escapeT-1.8)/1.8,0,1);ctx.fillStyle=`rgba(0,0,0,${k2})`;ctx.fillRect(0,0,VW,VH);}
 }
@@ -2129,6 +2131,7 @@ function guestEv([,n,a,b]){
   case 'alarm':S.alarm();setTimeout(()=>S.subEngine(),900);G.shake=10;break;
   case 'screech':S.screech();break;
   case 'ghost':ghostEyes();break;
+  case 'white':if(Net.vs){G.whiteMax=+a||4;G.whiteT=G.whiteMax;if(b==='c')S.staticBurst();else S.shotgun();toast(b==='c'?'チャフで画面が乱れた！主人公を見失った':'閃光弾！ 画面が真っ白で何も見えない');}break;
   case 'pound':{const x=+a,y=+b;const [v,p]=spat(x+0.5,y+0.5,40);S.pound(Math.max(0.3,v),p);G.shake=Math.max(G.shake,4);G.flick=1;break;}
   case 'escape':if(Net.vs){vsResult(false);break;}if(G.state==='play')startEscape();break;
   case 'over':if(Net.vs){vsResult(true);break;}if(G.state==='play'){G.state='play';caught(true);}break;
@@ -2460,7 +2463,7 @@ function useItem(){
  if(!(b[b.sel]>0)){selItem();if(!(b[b.sel]>0)){S.deny();toast('アイテムを持っていない');return;}}
  const k=b.sel;b[k]--;
  if(useItem2(k)){if(!(b[k]>0))selItem();return;}
- if(k==='flash'){G.flash=Math.max(G.flash,0.7);S.shotgun();vib([60,30,160],'fl',300);sparks(P.x,P.y,20,6);
+ if(k==='flash'){if(Net.on&&Net.vs&&Net.host)netEv('white',4.5,'f');G.flash=Math.max(G.flash,0.7);S.shotgun();vib([60,30,160],'fl',300);sparks(P.x,P.y,20,6);
   if(E&&Math.hypot(E.x-P.x,E.y-P.y)<7.5&&los(P.x,P.y,E.x,E.y)){E.stunT=3.2;E.lunge=null;E.act=null;S.screech();toast('閃光弾でECHO-01がひるんだ！');badge('shot');}
   for(const c of G.crawl||[])if(Math.hypot(c.x-P.x,c.y-P.y)<7&&los(P.x,P.y,c.x,c.y))c.stun=5;stunHunters(P.x,P.y,7,5,true);
   {let hit=0;for(const g of G.guards||[])if(g.sleep<=0&&Math.hypot(g.x-P.x,g.y-P.y)<8.5&&los(P.x,P.y,g.x,g.y)){g.sleep=g.type==='drone'?6:5;g.sus=0;hit++;}if(hit)toast('閃光弾で警備がひるんだ！今のうちに逃げろ');}
@@ -2647,7 +2650,7 @@ function useItem2(k){
  if(k==='emp'){S.shotgun();G.shake=7;G.flash=0.25;vib(120);const mx=P.x+Math.cos(P.face)*0.5,my=P.y+Math.sin(P.face)*0.5;for(let i=0;i<14;i++){const a=P.face+rand(-0.3,0.3),sp=rand(8,16);part({t:'spk',x:mx,y:my,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0.25,max:0.25});}
   if(E&&!E.dormant&&!E.dead){const dx=E.x-P.x,dy=E.y-P.y,d=Math.hypot(dx,dy);if(d<5.5&&Math.abs(angDiff(P.face,Math.atan2(dy,dx)))<0.7&&los(P.x,P.y,E.x,E.y)){E.stunT=Math.max(E.stunT,3);E.lunge=null;E.act=null;sparks(E.x,E.y,20,7);S.screech();toast('電磁ショットガンでECHO-01を止めた！');}}
   stunHunters(P.x,P.y,5.5,4,true);for(const g of G.guards||[]){const dx=g.x-P.x,dy=g.y-P.y,d=Math.hypot(dx,dy);if(d<5&&Math.abs(angDiff(P.face,Math.atan2(dy,dx)))<0.6&&los(P.x,P.y,g.x,g.y)){g.sleep=40;}}makeNoise(P.x,P.y,12);return true;}
- if(k==='chaff'){G.chaff=15;for(const c of G.cams||[])c.off=15;if(E&&!E.dormant){E.chaffT=10;}G.flash=0.3;S.staticBurst();toast('チャフ：カメラ・ドローン・ECHO-01のセンサーが15秒狂う');return true;}
+ if(k==='chaff'){if(Net.on&&Net.vs&&Net.host)netEv('white',3.5,'c');G.chaff=15;for(const c of G.cams||[])c.off=15;if(E&&!E.dormant){E.chaffT=10;}G.flash=0.3;S.staticBurst();toast('チャフ：カメラ・ドローン・ECHO-01のセンサーが15秒狂う');return true;}
  if(k==='box'){P.box=!P.box;G.bag.box++;S.paper();toast(P.box?'段ボールをかぶった。止まっていれば見つからない':'段ボールを脱いだ');return true;}
  if(k==='camo'){P.camo=25;S.subEngine();toast('ステルス迷彩 起動（25秒）');return true;}
  return false;
