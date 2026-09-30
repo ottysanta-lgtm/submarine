@@ -322,7 +322,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 2.6（恐怖演出強化）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 2.7（脱出シーンのECHO修正）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -1499,7 +1499,7 @@ function answerReport(i){
   ['報告','報告書は受理された。\nECHO-01は「回収不能の暴走兵器」として記録された。'],
   ['','潜航する直前。\n背後で、何かが水面を叩く音がした。'],
   ['NORMAL END','本当に、それだけだったのだろうか。','omega']];}
- if(G.echoDefeated)slides.unshift(['撃破','格納庫に横たわるECHO-01の赤い眼が、最後に一度だけ、ゆっくりと瞬いた。','omega']);
+ if(G.echoDefeated)slides.unshift(['撃破','一度は止めたはずのECHO-01。その赤い眼は、暗い海の底へゆっくりと沈んでいった。','omega']);
  playStory(slides,()=>{S.victory();finish(true,ending);},true);
 }
 // ---- fullscreen / landscape ----
@@ -2180,10 +2180,10 @@ function startShooter(){
  $('actLabel').textContent='閃光弾';$('skillBtnLabel').textContent='';$('bSkill').hidden=true;$('bRun').textContent='ブースト';$('bItem').hidden=true;$('bSel').hidden=true;
  const dp=G.depth||0;
  Object.assign(SH,{t:0,dist:0,total:13500*(Net.on?1.8:1),spd:190,x:VW*0.42,y:VH*0.5,vx:0,vy:0,hull:5+upLv('hull'),maxHull:5+upLv('hull'),inv:1.5,flash:3,fireT:0,boost:100,boostOn:false,
-  echo:-VW*0.25,echoV:22+dp*4,echoStun:0,lunge:null,lungeT:6,torps:[],foes:[],shots:[],fx:[],bub:[],pick:[],spawnT:1.5,shake:0,win:0,flashFx:0,hitFx:0,dp,prop:0,warn:0,msgT:0,msg:''});
+  echo:-VW*0.12,echoV:22+dp*4,echoStun:0,lunge:null,lungeT:6,torps:[],foes:[],shots:[],fx:[],bub:[],pick:[],spawnT:1.5,shake:0,win:0,flashFx:0,hitFx:0,dp,prop:0,warn:0,msgT:0,msg:''});
  for(let i=0;i<60;i++)SH.bub.push({x:Math.random()*VW,y:Math.random()*VH,r:rand(1,3),s:rand(20,60)});
  Snd.setChase(true);S.subEngine();
- if(G.echoDefeated){SH.noEcho=true;SH.echo=-VW*20;SH.echoV=0;shMsg('ECHO-01は倒した。残る警備ドローンを振り切れ！',3);}else{S.screech();shMsg('ECHO-01が追ってくる！ 海面まで逃げ切れ',3);}
+ if(G.echoDefeated){SH.echo=-VW*0.14;SH.echoV-=3;S.screech();setTimeout(()=>S.siren(),400);shMsg('停止したはずのECHO-01が再起動した！ 振り切れ！',3.2);}else{S.screech();shMsg('ECHO-01が追ってくる！ 海面まで逃げ切れ',3);}
  G.checkpoint={ch:5,docs:[...G.docsRun],breakers:(G.breakers||[]).map(b=>b.on),runT:G.runT};
  updateTouchUI();
 }
