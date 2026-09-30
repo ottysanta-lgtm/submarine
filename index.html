@@ -322,12 +322,13 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 2.4（対戦モード）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 2.5（ヒント・難易度・歩行・軽量化）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
  <div class="head"><h2><small>SELECT ROLE</small>役職を選ぶ</h2><button class="back">戻る</button></div>
  <div class="scroll"><div id="roleList"></div></div>
+ <div class="mapSel"><span>難易度</span><button class="rchip" id="dfE">かんたん<small>体力+2・ECHOが遅い</small></button><button class="rchip" id="dfN">ふつう<small>標準</small></button><button class="rchip" id="dfH">むずかしい<small>速い・鋭い</small></button></div>
  <div class="mapSel"><span>マップ</span><button class="rchip" id="mapC">コンパクト<small>いつもの広さ</small></button><button class="rchip" id="mapW">ワイド<small>下層区画つき・約1.5倍</small></button></div>
  <div class="goRow"><p>見つからずに進め。ECHO-01は途中で目を覚ます。<br>シャッター・通気口・ロッカー・アイテムを使え。</p><button class="bigbtn" id="btnGo">潜入する</button></div>
 </section>
@@ -716,7 +717,7 @@ const fog=document.createElement('canvas'),fctx=fog.getContext('2d');const FS=0.
 let mapC=null,mctx=null,PS=1;
 function psFor(){const mx=WIDE?1.15:1.4;return clamp(Math.min(mx,DPR*SCALE),1,mx);}
 function resize(){
- CW=innerWidth;CH=Math.max(200,innerHeight-VIS.t-VIS.b);DPR=Math.min(devicePixelRatio||1,2);
+ CW=innerWidth;CH=Math.max(200,innerHeight-VIS.t-VIS.b);DPR=Math.min(devicePixelRatio||1,(typeof LOWQ!=='undefined'&&LOWQ)?1:2);
  cvs.width=Math.round(CW*DPR);cvs.height=Math.round(CH*DPR);cvs.style.width=CW+'px';cvs.style.height=CH+'px';cvs.style.top=VIS.t+'px';
  const a=CW/CH;if(a>=1){VH=430;VW=VH*a;}else{VW=430;VH=VW/a;}SCALE=CW/VW;
  fog.width=Math.ceil(VW*FS);fog.height=Math.ceil(VH*FS);
@@ -1273,7 +1274,7 @@ function banner(t,s){netEv('banner',t,s);$('bannerT').textContent=t;$('bannerS')
 function updateCredits(){document.querySelectorAll('.credits').forEach(el=>el.textContent=SAVE.credits.toLocaleString());const bl=document.getElementById('badgeLv');if(bl)bl.textContent=`${(SAVE.badges||[]).length}/${BADGES.length}`;const dl=document.getElementById('depthLv');if(dl){const d=Math.min(3,SAVE.escapes||0);dl.textContent=d;document.getElementById('depthChip').title=d?DEPTH_TXT[d]:'脱出するたびに深度が上がる';}}
 function equipCol(type){const id=SAVE.equip[type];const it=SHOP.find(s=>s.id===id)||SHOP.find(s=>s.type===type);return it.col;}
 // roles
-function mapSelUI(){const w=SAVE.mapMode==='wide';$('mapC').classList.toggle('sel',!w);$('mapW').classList.toggle('sel',w);}
+function mapSelUI(){diffUI();const w=SAVE.mapMode==='wide';$('mapC').classList.toggle('sel',!w);$('mapW').classList.toggle('sel',w);}
 function buildRoles(){mapSelUI();const box=$('roleList');box.innerHTML='';ROLES.forEach(r=>{const b=document.createElement('button');b.className='role'+(r===role?' sel':'');b.innerHTML=`<span class="ri">${ICO[r.id]}</span><span class="rn">${r.name}</span><span class="rit">${r.item}</span><span class="rd">${r.desc}</span>`;b.style.setProperty('--rc',r.col);const own=roleOwned(r.id);if(!own){b.classList.add('lockd');b.querySelector('.rit').textContent='ショップで購入：'+(ROLE_PRICE[r.id]||0).toLocaleString()+' CREDIT';}b.onclick=()=>{if(!roleOwned(r.id)){S.deny();toast('ショップの「役職」タブで購入できます');return;}role=r;S.click();buildRoles();};box.appendChild(b);});}
 // archive
 function buildArchive(){const box=$('arcList');box.innerHTML='';
@@ -1312,7 +1313,8 @@ mini.addEventListener('click',()=>{S.click();toggleBigMap();});$('bigmap').addEv
 // ---- difficulty: chapter curve x dive depth ----
 const CH_DIFF={1:{amb:0.55,lampK:2.2,flash:10,spd:0,vis:8,lunge:9,brk:0.06},2:{amb:0.78,lampK:1.6,flash:9,spd:-0.3,vis:7.2,lunge:1.7,brk:0.06},3:{amb:0.87,lampK:1.2,flash:8.2,spd:0,vis:8.5,lunge:1,brk:0.1},4:{amb:0.92,lampK:0.9,flash:7.6,spd:0.35,vis:11,lunge:0.7,brk:0.18}};
 const depth=()=>Math.min(3,SAVE.escapes||0);
-const BRIGHT=[0,0.12,0.24];function D(){const c=CH_DIFF[G.ch]||CH_DIFF[3],d=G.depth||0;const bk=BRIGHT[SAVE.bright==null?(isTouch?1:0):SAVE.bright]||0;return {amb:Math.max(0.3,Math.min(0.97,c.amb+d*0.012)-bk),lampK:c.lampK*(1-d*0.12),flash:c.flash-d*0.35,spd:c.spd+d*0.12,vis:c.vis+d*0.6,lunge:c.lunge*(1-d*0.12),brk:Math.min(0.45,c.brk+d*0.05)};}
+const BRIGHT=[0,0.12,0.24];function D(){const r=D0();const k=SAVE.diff==null?1:SAVE.diff;r.spd+=[-0.4,0,0.3][k];r.vis*=[0.85,1,1.15][k];r.lunge*=[1.5,1,0.8][k];r.brk*=[0.5,1,1.4][k];return r;}
+function D0(){const c=CH_DIFF[G.ch]||CH_DIFF[3],d=G.depth||0;const bk=BRIGHT[SAVE.bright==null?(isTouch?1:0):SAVE.bright]||0;return {amb:Math.max(0.3,Math.min(0.97,c.amb+d*0.012)-bk),lampK:c.lampK*(1-d*0.12),flash:c.flash-d*0.35,spd:c.spd+d*0.12,vis:c.vis+d*0.6,lunge:c.lunge*(1-d*0.12),brk:Math.min(0.45,c.brk+d*0.05)};}
 const DEPTH_TXT=['','前回、ECHO-01は回収できなかった。','潜るたびに、艦内の音が近くなっている。','本部との通信に、知らない声が混ざる。'];
 
 const CH1_DOCS=['diary','photo','phone','voice'];
@@ -1394,7 +1396,7 @@ function startChapter(n){
  else if(n===3){E=newEcho(18.5,24.5);E.idleT=1;}
  else{for(const g of gates)if(g.grp==='hangar'){g.open=true;g.anim=1;}setupBoss();const pos=spawnEchoAway(11,17)||spawnEchoAway(7,12)||[38.5,28.5];E=newEcho(pos[0],pos[1]);E.idleT=99;schedule(4.5,()=>{E.last=[P.x,P.y];setEchoState('search');E.searchT=8;E.huntT=10;});}
  if(Net.on&&Net.host&&Net.vs&&n<5){E=newEcho(18.5,24.5);E.dormant=false;E.vsHold=30;G.breakoutFn=null;schedule(2,()=>toast('対戦モード：ECHO-01はプレイヤーが操作している。30秒後に動き出す'));}
- P.bandage=(P.bandage||0)+(G.kits||0);P.hp=4+(eqS()==='suit_armor'?2:0);P.hpMax=P.hp;setupHazards(n);if(eqW()==='w_emp')G.bag.emp=Math.max(G.bag.emp||0,3);spawnPickups(n);setupGuards(n);devApply();setupGimmicks();
+ P.bandage=(P.bandage||0)+(G.kits||0);P.hp=4+(eqS()==='suit_armor'?2:0)+(DIFK()===0?2:0);P.hpMax=P.hp;setupHazards(n);if(eqW()==='w_emp')G.bag.emp=Math.max(G.bag.emp||0,3);spawnPickups(n);setupGuards(n);devApply();setupGimmicks();
  cam.x=P.x*T-VW/2;cam.y=P.y*T-VH/2;
  showScreen(null);clearRadio();$('roleTag').innerHTML=ICO[role.id]+' '+role.name;$('skillBtnLabel').textContent=role.skill||role.item;$('bSkill').hidden=!role.skill;
  updateTouchUI();Snd.setChase(false);
@@ -1524,7 +1526,7 @@ function update(dt){
  for(const g of gates)g.anim=lerp(g.anim,g.open?1:0,Math.min(1,dt*2.5));
  if(G.state==='play'){
   G.runT+=dt;
-  if(G.freezeT>0){G.freezeT-=dt;}else if(Net.on&&!Net.host)guestUpdate(dt);else{updatePlayer(dt);updateEcho(dt);updateExtras(dt);updateGuards(dt);updateBoss(dt);updateOutage(dt);updateGimmicks(dt);if(Net.on&&P.downed&&!(P2&&P2.here&&!P2.down))caught();}
+  if(G.freezeT>0){G.freezeT-=dt;}else if(Net.on&&!Net.host)guestUpdate(dt);else{updatePlayer(dt);updateEcho(dt);updateExtras(dt);updateGuards(dt);if(!(Net.on&&Net.vs&&!Net.host))tipsTick(dt);updateBoss(dt);updateOutage(dt);updateGimmicks(dt);if(Net.on&&P.downed&&!(P2&&P2.here&&!P2.down))caught();}
   partnerTick(dt);
   if(P.locker&&G.lockChase&&E&&E.state!=='chase'&&!E.rip){G.lockChase=false;badge('locker');}
   const chasing=E.state==='chase'||!!E.lunge;Snd.setChase(chasing||G.unlocked&&E.state==='search'||G.phase==='alert'||G.phase==='evasion');
@@ -1711,7 +1713,7 @@ function drawPlayer(){
  ctx.fillStyle='rgba(0,0,0,.45)';ctx.beginPath();ctx.ellipse(2,4,11,8,0,0,TAU);ctx.fill();
  if(P.downT>0||P.downed){ctx.rotate(f+Math.PI/2);ctx.fillStyle=suit;ctx.fillRect(-7,-12,14,22);ctx.fillStyle='#d8c0a0';ctx.beginPath();ctx.arc(0,-15,5.5,0,TAU);ctx.fill();ctx.restore();return;}
  if(P.zip){ctx.strokeStyle='#222';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-3,-6);ctx.lineTo(-2,-16);ctx.moveTo(3,-6);ctx.lineTo(2,-16);ctx.stroke();}
- if(sprOk('pl_'+role.id)&&!P.zip){const sw=P.moving?Math.sin(P.ph):0;ctx.rotate(f+Math.PI/2+sw*0.07);const sc=1+Math.abs(sw)*0.04;ctx.scale(sc,sc);drawSpr('pl_'+role.id,0,0,T*1.05,0);}else{
+ if(sprOk('pl_'+role.id)&&!P.zip){const sw=P.moving?Math.sin(P.ph):0;ctx.rotate(f+Math.PI/2);ctx.fillStyle='#111316';for(const [bx,d] of [[-6,1],[6,-1]]){ctx.beginPath();ctx.ellipse(bx,T*0.3-sw*d*9,4.5,6,0,0,TAU);ctx.fill();}ctx.translate(sw*1.8,-Math.abs(sw)*2);ctx.rotate(sw*0.06);drawSpr('pl_'+role.id,0,0,T*1.05,0);}else{
  ctx.rotate(f);
  const sw=P.moving?Math.sin(P.ph):0,amp=P.sprint?7:5;
  // legs / boots
@@ -1838,6 +1840,7 @@ $('btnStart').onclick=()=>{Snd.init();S.click();buildRoles();showScreen('roles')
 $('btnArchive').onclick=()=>{Snd.init();S.click();buildArchive();showScreen('archive');};
 $('btnShop').onclick=()=>{Snd.init();S.click();buildShop();updateCredits();showScreen('shop');};
 $('btnGo').onclick=()=>startGame();
+$('dfE').onclick=()=>{SAVE.diff=0;save();S.click();diffUI();};$('dfN').onclick=()=>{SAVE.diff=1;save();S.click();diffUI();};$('dfH').onclick=()=>{SAVE.diff=2;save();S.click();diffUI();};
 $('mapC').onclick=()=>{SAVE.mapMode='compact';save();S.click();mapSelUI();};$('mapW').onclick=()=>{SAVE.mapMode='wide';save();S.click();mapSelUI();};
 document.querySelectorAll('.back').forEach(b=>b.onclick=()=>{S.click();showScreen('lobby');});
 $('resRetry').onclick=()=>{if(Net.on){if(G.lastWin)openCoop();else if(Net.host&&G.checkpoint)startChapter(G.checkpoint.ch);return;}if(!G.lastWin&&G.checkpoint){startChapter(G.checkpoint.ch);}else{buildRoles();showScreen('roles');}};
@@ -2485,7 +2488,7 @@ function guardSees(g){
  const dx=P.x-g.x,dy=P.y-g.y,d=Math.hypot(dx,dy);if(d>rng)return 0;
  if(T_.fov<3&&Math.abs(angDiff(g.a,Math.atan2(dy,dx)))>T_.fov+(caution?0.15:0))return 0;
  if(g.type==='drone'&&G.chaff>0)return 0;if(!los(g.x,g.y,P.x,P.y))return 0;
- let k=(1.9-d/rng)*(P.sprint?1.6:1)*(P.moving?1:0.7)*(eqS()==='suit_sneak'?0.7:1)*(LX().st||1);if(P.box){k*=P.moving?0.35:0;}return k;
+ let k=(1.9-d/rng)*(P.sprint?1.6:1)*(P.moving?1:0.7)*(eqS()==='suit_sneak'?0.7:1)*(LX().st||1)*[0.7,1,1.3][DIFK()];if(P.box){k*=P.moving?0.35:0;}return k;
 }
 function setPhase(p){if(G.phase===p)return;const prev=G.phase;G.phase=p;
  if(p==='alert'){G.phaseT=0;for(const g of G.guards||[])g.fireT=Math.max(g.fireT,1.2);S.stinger();vib([120,60,120],'alert',1500);toast('見つかった！　警報発令');
@@ -2567,7 +2570,7 @@ function drawGuards(inView,cones){
   if(g.type==='drone'){ctx.translate(0,-8+Math.sin(g.ph*4)*2);ctx.fillStyle=g.sleep>0?'#333':'#8a9096';ctx.beginPath();ctx.ellipse(0,0,10,7,0,0,TAU);ctx.fill();ctx.strokeStyle='#ccc';ctx.lineWidth=1.2;const r=Math.sin(g.ph*40)*11;ctx.beginPath();ctx.moveTo(-r,-8);ctx.lineTo(r,-8);ctx.stroke();ctx.fillStyle=g.sleep>0?'#222':'#ff3020';ctx.beginPath();ctx.arc(Math.cos(g.a)*6,Math.sin(g.a)*4,2.5,0,TAU);ctx.fill();ctx.restore();continue;}
   if(g.sleep>0&&sprOk('en_'+g.type)){ctx.rotate(g.a);drawSpr('en_'+g.type,0,0,T*(g.type==='heavy'?1.25:1.05),0,0.55);ctx.restore();ctx.fillStyle='rgba(200,220,255,.8)';ctx.font='700 11px sans-serif';ctx.fillText('Zz',g.x*T+8,g.y*T-10-Math.sin(G.t*2)*3);continue;}
   if(g.sleep>0){ctx.rotate(g.a+Math.PI/2);ctx.fillStyle=T_.col;ctx.fillRect(-7,-12,14,22);ctx.fillStyle='#2a2e32';ctx.beginPath();ctx.arc(0,-15,6,0,TAU);ctx.fill();ctx.restore();ctx.fillStyle='rgba(200,220,255,.8)';ctx.font='700 11px sans-serif';ctx.fillText('Zz',g.x*T+8,g.y*T-10-Math.sin(G.t*2)*3);continue;}
-  if(sprOk('en_'+g.type)){const sw=Math.sin(g.ph*6);ctx.rotate(g.a+Math.PI/2+sw*0.05);drawSpr('en_'+g.type,0,0,T*(g.type==='heavy'?1.3:1.1),0);ctx.restore();continue;}
+  if(sprOk('en_'+g.type)){const mv=g.path&&g.wait<=0;const sw=mv?Math.sin(g.ph*6):0;ctx.scale(Math.cos(g.a)<0?-1:1,1);ctx.translate(0,-Math.abs(sw)*2);ctx.rotate(sw*0.05);drawSpr('en_'+g.type,0,-T*0.25,T*(g.type==='heavy'?1.3:1.1),0);ctx.restore();continue;}
   ctx.rotate(g.a);const w=Math.sin(g.ph*6)*5;ctx.fillStyle='#15181b';ctx.beginPath();ctx.ellipse(w,-5,5,3,0,0,TAU);ctx.ellipse(-w,5,5,3,0,0,TAU);ctx.fill();
   ctx.strokeStyle='#111';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(2,4);ctx.lineTo(20,4);ctx.stroke();ctx.fillStyle=T_.col;ctx.beginPath();ctx.ellipse(0,0,g.type==='heavy'?9:7,g.type==='heavy'?12:10,0,0,TAU);ctx.fill();ctx.fillStyle='#1c2126';ctx.beginPath();ctx.arc(1,0,5.5,0,TAU);ctx.fill();ctx.fillStyle='rgba(255,230,180,.8)';ctx.fillRect(18,2.5,3,3);ctx.restore();}
  for(const b of G.bullets||[]){ctx.fillStyle='#ffd070';ctx.fillRect(b.x*T-2,b.y*T-2,4,4);}
@@ -2816,11 +2819,29 @@ function vsResult(win){
  $('resRetry').textContent='ホストの再開を待っています';$('resRetry').disabled=true;showScreen('result');updateCredits();
 }
 
+// ================= polish: tips, difficulty, auto quality =================
+var LOWQ=false;
+const DIFK=()=>SAVE.diff==null?1:SAVE.diff;
+function tip(id,text){SAVE.tips=SAVE.tips||{};if(SAVE.tips[id])return;SAVE.tips[id]=1;save();radio(text,'ヒント');}
+function tipsTick(dt){
+ G.tipT=(G.tipT||0)-dt;if(G.tipT>0||!P)return;G.tipT=0.5;const near=(x,y,r)=>Math.hypot(x-P.x,y-P.y)<r&&los(P.x,P.y,x,y);
+ for(const g of G.guards||[])if(near(g.x,g.y,8)){tip('guard','警備兵の光（視野）に入ると見つかる。背後から近づけば気絶させられる');break;}
+ for(const c of G.cams||[])if(!c.dead&&near(c.x+0.5,c.y+0.5,7)){tip('cam','カメラの真下は死角。近づけば壊せる。麻酔銃でも壊せる');break;}
+ for(const it of G.pickups||[])if(near(it.x+0.5,it.y+0.5,3.5)){tip('pick','アイテムは拾ったら右下の青いボタンで使う。⇄で種類を切り替え');break;}
+ if(E&&!E.dormant&&E.state==='chase')tip('chase','追われている！ 走って逃げろ。通気口に入るか、シャッターを閉めろ');
+ if(E&&!E.dormant)for(const L of LOCKERS)if(near(L.x+0.5,L.y+0.5,3)){tip('locker','ロッカーに隠れればECHO-01をやり過ごせる。見られていると引きずり出される');break;}
+ if(G.looted&&typeof nearLoot==='function'){for(const f of FURN){if(!LOOT_T.includes(f.t))continue;if(near(f.x+f.w/2,f.y+f.h/2,3.5)){tip('shelf','金色に光る棚は調べられる。アイテムが入っていることがある');break;}}}
+ if(isWet(P.x,P.y))tip('wet','水たまりを走ると音で気づかれる。ゆっくり歩け');
+ for(const s of G.steams||[])if(near(s.x,s.y,4)){tip('steam','蒸気パイプはオレンジに光ったら噴き出す。ECHO-01を巻き込めば足止めになる');break;}
+}
+function diffUI(){const k=DIFK();['dfE','dfN','dfH'].forEach((id,i)=>$(id).classList.toggle('sel',i===k));}
+function qualityCheck(dt){if(G.state!=='play'||G.qDone)return;G.qN=(G.qN||0)+1;G.qT=(G.qT||0)+dt;if(G.qN>=150){G.qDone=true;if(G.qT/G.qN>1/40&&!LOWQ){LOWQ=true;resize();toast('動作を軽くするため画質を調整しました');}}}
+
 // ================= loop =================
 let last=performance.now();
 function frame(now){
  requestAnimationFrame(frame);
- let dt=(now-last)/1000;last=now;if(!(dt>0))dt=0;if(dt>0.05)dt=0.05;
+ let dt=(now-last)/1000;last=now;if(!(dt>0))dt=0;qualityCheck(dt);if(dt>0.05)dt=0.05;
  netTick(dt);
  if(!G.paused&&dt>0&&G.state!=='doc'&&G.state!=='lobby'&&G.state!=='story'&&G.state!=='result'){const n=Math.max(1,Math.ceil(dt/(1/120))),h=dt/n;for(let i=0;i<n;i++)update(h);}
  if(G.state==='lobby')lobbyTick(dt);
