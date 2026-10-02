@@ -282,6 +282,27 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
  .doc{padding:10px;}#docImg{max-height:80vh;}#docText{font-size:14px;line-height:1.8;}
  #roleList{grid-template-columns:repeat(3,1fr);}.role{min-height:0;padding:8px;}.role .rd{font-size:11px;line-height:1.45;}
 }
+
+#opCard{position:absolute;right:max(16px,env(safe-area-inset-right));top:max(64px,calc(env(safe-area-inset-top) + 56px));width:min(300px,42vw);z-index:3;padding:12px 14px;background:linear-gradient(180deg,rgba(12,16,20,.82),rgba(8,10,13,.9));border:1px solid var(--line);border-top:2px solid var(--amber);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 12px 40px rgba(0,0,0,.55);animation:opIn .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes opIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#opCard .opTop{display:flex;align-items:baseline;gap:8px}#opCard .opTop b{font:900 22px var(--stencil);color:var(--amber);letter-spacing:.04em}
+#opCard .opName{font-size:10px;letter-spacing:.3em;color:var(--dim)}#opCard #streakChip{margin-left:auto;font-size:11px;color:#ff8a50}
+#opCard .opBar{height:5px;background:rgba(255,255,255,.1);margin:7px 0 3px;overflow:hidden}#opCard .opBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#e0a030,#ffd070);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+#opCard .opXp{font-size:10px;color:var(--dim);letter-spacing:.1em;text-align:right}
+#opCard .opRule{margin:8px 0 6px;padding:6px 8px;border-left:2px solid var(--red);background:rgba(255,42,26,.07);font-size:11.5px;line-height:1.5}
+#opCard .opH{font-size:10px;letter-spacing:.25em;color:var(--dim);margin:6px 0 4px}
+#missions .mi{padding:6px 0;border-top:1px solid var(--line);font-size:11.5px}#missions .mt{line-height:1.4}
+#missions .mb{height:3px;background:rgba(255,255,255,.1);margin:4px 0}#missions .mb i{display:block;height:100%;background:#7dffb0;transition:width .6s}
+#missions .mr{font-size:10.5px;color:var(--dim);text-align:right}#missions .mi.done .mr button{background:var(--amber);color:#111;border:0;padding:4px 10px;font-weight:900;font-size:11px;letter-spacing:.05em;animation:pulseBtn 1.4s infinite}
+#missions .mi.cl{opacity:.45}@keyframes pulseBtn{50%{box-shadow:0 0 0 4px rgba(224,160,48,.25)}}
+@media (max-width:760px) and (orientation:portrait){#opCard{position:relative;right:auto;top:auto;width:auto;margin:10px 18px}}
+@media (max-height:430px) and (orientation:landscape){#opCard{top:max(54px,calc(env(safe-area-inset-top) + 46px));width:min(250px,38vw);padding:8px 10px}#opCard .opRule{font-size:10.5px;padding:4px 6px;margin:5px 0 3px}#missions .mi{padding:4px 0}}
+.mbtn:active,.bigbtn:active,.rchip:active{transform:scale(.97)}
+.screen:not([hidden]){animation:scrIn .35s ease both}@keyframes scrIn{from{opacity:0}to{opacity:1}}
+#titleH{text-shadow:0 0 28px rgba(255,42,26,.35)}
+#ctDesc{flex-basis:100%;font-style:normal;font-size:11px;color:var(--amber);padding:2px 0 0 2px}#ctBox{flex-wrap:wrap;align-items:center}
+@media (max-height:430px) and (orientation:landscape){#ctBox .rchip{padding:5px 9px}#roles .mapSel{margin:4px 0}#roles .mapSel .rchip small{display:none}#roles .scroll{min-height:96px;flex:1 1 96px}#roles .goRow p{display:none}#roles .goRow{justify-content:flex-end;padding-top:4px}#roles .goRow .bigbtn{padding:10px 26px}#ctDesc{font-size:10px}}
+@media (max-height:430px) and (orientation:landscape){#lobby .menu{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:560px}#lobby .menu .mbtn{padding:9px 12px;font-size:14px;margin:0}#lobby .menu .mbtn.primary{grid-column:1/-1}#lobby .menu .mbtn small{font-size:9px}#lobby .sub{font-size:12px;margin:4px 0 8px}#lobby .kicker{margin-bottom:2px}#lobby .foot{display:none}}
 </style>
 </head>
 <body>
@@ -324,14 +345,16 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div id="dailyMod" style="margin:10px 0 2px;padding:8px 12px;border-left:3px solid #e0a030;background:rgba(224,160,48,.08);font-size:13px;line-height:1.6"></div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.95（新フロア追加）</span></div>
+ <div id="opCard"><div class="opTop"><b id="opLv">Lv.1</b><span class="opName">OPERATOR</span><span id="streakChip"></span></div><div class="opBar"><i id="opBar"></i></div><div id="opXp" class="opXp"></div>
+  <div class="opRule" id="dailyMod"></div><div class="opH">本日のミッション</div><div id="missions"></div></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 4.0（新フロア追加）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
  <div class="head"><h2><small>SELECT ROLE</small>役職を選ぶ</h2><button class="back">戻る</button></div>
  <div class="scroll"><div id="roleList"></div></div>
- <div class="mapSel"><span>難易度</span><button class="rchip" id="dfE">かんたん<small>体力+2・ECHOが遅い</small></button><button class="rchip" id="dfN">ふつう<small>標準</small></button><button class="rchip" id="dfH">むずかしい<small>速い・鋭い</small></button></div>
+ <div class="mapSel" id="ctBox"></div>
+  <div class="mapSel"><span>難易度</span><button class="rchip" id="dfE">かんたん<small>体力+2・ECHOが遅い</small></button><button class="rchip" id="dfN">ふつう<small>標準</small></button><button class="rchip" id="dfH">むずかしい<small>速い・鋭い</small></button></div>
  <div class="mapSel"><span>マップ</span><button class="rchip" id="mapC">コンパクト<small>いつもの広さ</small></button><button class="rchip" id="mapW">ワイド<small>下層区画つき・約1.5倍</small></button><button class="rchip" id="mapD">新フロア 水耕農園<small>環状回廊・ぐるぐる逃げられる</small></button><button class="rchip" id="mapT">隔離病棟<small>縦長・中央シャフトで上下に逃げる</small></button></div>
  <div class="goRow"><p>見つからずに進め。ECHO-01は途中で目を覚ます。<br>シャッター・通気口・ロッカー・アイテムを使え。</p><button class="bigbtn" id="btnGo">潜入する</button></div>
 </section>
@@ -391,11 +414,11 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
 <section id="result" class="screen" hidden>
  <h2 id="resTitle"></h2><p id="resSub"></p>
  <div class="stats"><div><small>生存時間</small><b id="rTime"></b></div><div><small>集めた資料</small><b id="rDocs"></b></div><div><small>調査ランク</small><b id="rRank"></b></div><div><small>獲得クレジット</small><b id="rCred"></b></div><div><small>ステルス評価</small><b id="rGrade"></b></div></div>
- <p id="resHint"></p><p id="resBadges"></p><p id="resTease"></p>
+ <p id="resXp" style="color:var(--amber);font-weight:700;margin:2px 0"></p><p id="resCt" style="margin:2px 0;font-size:13px"></p><p id="resHint"></p><p id="resBadges"></p><p id="resTease"></p>
  <div class="row"><button class="bigbtn" id="resRetry">もう一度潜る</button><button class="ghost" id="resLobby">ロビーへ</button></div>
 </section>
 
-<div id="pause" class="overlay" hidden><div class="card"><h3>PAUSE</h3><div class="col"><button class="bigbtn" id="resumeBtn">再開する</button><button class="muteBtn">サウンド オン</button><button class="muteBtn" id="brBtn">明るさ：明るい</button><button class="muteBtn" id="vibBtn">振動 オン</button><button class="ghost" id="quitBtn">ロビーへ戻る</button></div></div></div>
+<div id="pause" class="overlay" hidden><div class="card"><h3>PAUSE</h3><div class="col"><button class="bigbtn" id="resumeBtn">再開する</button><button class="muteBtn">サウンド オン</button><button class="muteBtn" id="brBtn">明るさ：明るい</button><button class="muteBtn" id="dreadBtn">恐怖演出：標準</button><button class="muteBtn" id="vibBtn">振動 オン</button><button class="ghost" id="quitBtn">ロビーへ戻る</button></div></div></div>
 
 <div id="bigmap" class="overlay" hidden><canvas id="bigCanvas"></canvas><p><span><i style="background:#fff;border-radius:50%"></i>自分</span><span><i style="background:#5ae6ff"></i>通気口</span><span><i style="background:#e0a030"></i>シャッター / ジップライン</span><span><i style="background:#ff5040"></i>破損・封鎖</span><span><i style="background:#ff8a30;transform:rotate(45deg)"></i>犬・コウモリ</span><span><i style="background:#d8d060;border-radius:50%"></i>トゲ鉄球</span><span><i style="background:#60e0ff"></i>アイテム</span><span>タップで閉じる</span></p></div>
 
@@ -1184,6 +1207,7 @@ function nearestInteract(){
  if(P.downed||P.reading)return null;
  if(G.coreT>0&&E&&Math.hypot(E.x-P.x,E.y-P.y)<2.2)return {type:'finish',label:'コアを破壊する'};
  for(const [i,p] of (G.pylons||[]).entries())if(!G.bossDown&&p.cd<=0&&p.ch<=0&&Math.hypot(p.x+0.5-P.x,p.y+0.5-P.y)<1.4)return {type:'pylon',i,label:'電磁パイロンを起動'};
+ for(const l of G.logs||[])if(!l.got&&Math.hypot(l.x+0.5-P.x,l.y+0.5-P.y)<1.3)return {type:'log',l,label:'音声ログを再生'};
  {const cq=nearGuardCQC();if(cq)return {type:'cqc',g:cq.g,label:'背後から気絶させる'};}
  {const rs=nearRobotShort();if(rs)return {type:'short',h:rs.h,g:rs.g,label:'背後からショートさせる'};}
  for(const c of G.cams||[]){if(c.dead)continue;const cy=c.y+0.5+(c.dir>0?0.45:-0.45);if(Math.hypot(c.x+0.5-P.x,cy-P.y)<1.3)return {type:'camkill',c,label:'カメラを壊す'};}
@@ -1211,6 +1235,7 @@ function doAction(){
  if(G.state!=='play'||G.paused)return;const it=nearestInteract();if(!it){return;}
  switch(it.type){
   case 'doc':vib(25,'doc');openDoc(it.d,true);break;
+  case 'log':playLog(it.l);break;
   case 'pick':pickUp(it.it);break;
   case 'loot':lootShelf(it.f);break;
   case 'rebuild':rebuildWall(it.d);break;
@@ -1226,7 +1251,7 @@ function doAction(){
   case 'repair':{P.work={t:0,dur:1.6,repair:it.s,done:()=>{if(Net.on&&!Net.host){netAct('rep',shutters.indexOf(it.s));toast('シャッターを修理した');return;}it.s.broken=false;it.s.closed=false;S.shutter(false,0.7,0);toast('シャッターを修理した');}};S.click();break;}
   case 'brokenInfo':S.deny();toast('壊れている。整備士なら修理できる');break;
   case 'gate':S.deny();toast(it.g.grp==='hangar'?'迎えのミニサブマリンはまだ来ていない':'研究区画の隔壁。電源が無いと開かない');break;
-  case 'hide':{G.lockChase=!!(E&&E.state==='chase');P.locker=it.L;P.hidden=true;P.vx=P.vy=0;S.locker();if(E&&(E.state==='chase'||E.lunge)&&E.lostT<0.7&&Math.hypot(E.x-P.x,E.y-P.y)<7){E.rip=it.L;}break;}
+  case 'hide':{mission('hide');G.lockChase=!!(E&&E.state==='chase');P.locker=it.L;P.hidden=true;P.vx=P.vy=0;S.locker();if(E&&(E.state==='chase'||E.lunge)&&E.lostT<0.7&&Math.hypot(E.x-P.x,E.y-P.y)<7){E.rip=it.L;}break;}
   case 'unhide':{P.locker=null;P.hidden=false;P.inv=Math.max(P.inv,0.3);S.locker();break;}
   case 'breaker':{const b=it.b;P.work={t:0,dur:1.8,done:()=>{if(Net.on&&!Net.host){netAct('brk',G.breakers.indexOf(b));S.breaker();return;}breakerOn(b);}};S.servo(0.6,0);break;}
   case 'sub':if(Net.on&&!Net.host)netAct('board');else startEscape();break;
@@ -1259,7 +1284,7 @@ let curDoc=null;
 function openDoc(d,fromWorld){
  curDoc=d;const wasNew=fromWorld&&!d.got;
  if(fromWorld&&Net.on&&!Net.host&&!d.got)netAct('doc',d.id);
- if(fromWorld){d.got=true;G.docsRun.add(d.id);if(!SAVE.docs.includes(d.id)){SAVE.docs.push(d.id);d.firstTime=true;save();}S.paper();}
+ if(fromWorld){if(!d.got)mission('doc');d.got=true;G.docsRun.add(d.id);if(!SAVE.docs.includes(d.id)){SAVE.docs.push(d.id);d.firstTime=true;save();}S.paper();}
  $('docTitle').textContent=d.title;$('docImg').src=IMG[d.img]||'';$('docImg').alt=d.title;$('docText').textContent=d.text;
  $('docVoice').hidden=!d.voice;$('docVoiceBtn').textContent='音声ログを再生';$('docVoiceBtn').disabled=false;
  $('docCount').textContent=fromWorld?`調査ランク ${G.docsRun.size}　（${G.docsRun.size}/${DOCS.length}）`:'';
@@ -1291,13 +1316,17 @@ function finish(win,ending){
  G.state='result';G.lastWin=win;clearRadio();$('rotate').hidden=true;
  const n=G.docsRun.size;let credits=n*20+(win?150:20)+Math.floor(G.runT/10)+(ending==='true'?200:0);credits=Math.round(credits*(MOD.cred||1));
  if(ending){SAVE.endings=SAVE.endings||[];if(!SAVE.endings.includes(ending))SAVE.endings.push(ending);}
- if(win){badge('escape');if(n>=DOCS.length)badge('alldocs');if(ending==='true')badge('true');if(G.runT<480)badge('fast');if(!G.everCaught)badge('nocatch');if((SAVE.escapes||0)+1>=3)badge('depth3');}
+ if(win){mission('escape');if(!G.alertN)mission('ghost');if(G.runT<600)mission('speed');badge('escape');if(n>=DOCS.length)badge('alldocs');if(ending==='true')badge('true');if(G.runT<480)badge('fast');if(!G.everCaught)badge('nocatch');if((SAVE.escapes||0)+1>=3)badge('depth3');}
  const newDocs=docs.filter(d=>d.got&&d.firstTime).length;credits+=newDocs*30;
  SAVE.credits+=credits;SAVE.best=Math.max(SAVE.best,n);if(win)SAVE.escapes++;save();
  $('resTitle').textContent=win?(ending==='true'?'TRUE END':'NORMAL END'):'GAME OVER';$('result').classList.toggle('lose',!win);
  $('resSub').textContent=win?(ending==='true'?'「エコー」':'ミニサブマリンで潜水艦を脱出した。'):`ECHO-01に捕まった。（${(CHAPTERS[G.ch]||{}).tag||''}）`;$('resRetry').textContent=win?'もう一度潜る':`${(CHAPTERS[G.ch]||{}).tag||''} からやり直す`;$('resRetry').disabled=false;if(Net.on&&!Net.host&&!win){$('resRetry').textContent='ホストの再開を待っています';$('resRetry').disabled=true;}
  const m=Math.floor(G.runT/60),s=Math.floor(G.runT%60);
  {let pts=(win?40:10)+Math.min(20,n*2.2)+(G.everCaught?0:20)+Math.min(14,(G.shorts||0)*3+(G.cqcN||0)*2)+(G.runT<600?10:G.runT<900?5:0);const gr=pts>=90?'S':pts>=75?'A':pts>=55?'B':'C';$('rGrade').textContent=gr+'（'+Math.round(pts)+'）';$('rGrade').style.color=gr==='S'?'#ffd070':gr==='A'?'#7dffb0':gr==='B'?'#9fe6ff':'#d9d6cc';}
+ {const gr0=($('rGrade').textContent||'C')[0];let xp=30+n*10+(win?100:0)+(G.ch||1)*15+(gr0==='S'?100:gr0==='A'?60:gr0==='B'?30:0);
+ const ct=(SAVE.contracts||[]).map(id=>CONTRACTS.find(c=>c.id===id)).filter(Boolean);const lines=[];
+ for(const c of ct){const ok=win&&c.ok();if(ok){xp+=c.xp;SAVE.credits+=c.cr;credits+=c.cr;}lines.push((ok?'✔ ':'✖ ')+c.name+(ok?'　+'+c.cr+'CR +'+c.xp+'XP':'　未達成'));}
+ const lv0=opLv();addXP(xp);$('resCt').textContent=lines.join('　');$('resXp').textContent='獲得XP +'+xp+(opLv()>lv0?'　▲ オペレーター Lv.'+opLv():'　（次のLvまで '+(XPNEED(opLv())-(SAVE.xp||0))+'）');}
  $('rTime').textContent=`${m}分${String(s).padStart(2,'0')}秒`;$('rDocs').textContent=`${n} / ${DOCS.length}`;$('rRank').textContent=String(n);$('rCred').textContent='+'+credits;
  const dUp=win&&(SAVE.escapes||0)<=3;$('resHint').textContent=(dUp?`潜航深度が ${Math.min(3,SAVE.escapes)} に上がった。次の潜入は、もっと暗く、ECHO-01はもっと速い。\n`:'')+(ending==='true'?'すべてを知ったあなたにだけ見えた結末。':win?(n<7?'資料が足りない。すべてを集め、正しく報告した者だけが、別の結末を見る。':'報告は正しかったか？ 資料をもう一度読み返してみよう。'):'資料は毎回違う場所に落ちている。音とライトのちらつきに気をつけろ。');
  $('resTease').textContent=teaser(win,ending);const rb=(G.runBadges||[]).map(id=>BADGES.find(q=>q[0]===id)).filter(Boolean);$('resBadges').textContent=rb.length?'今回獲得したバッジ：'+rb.map(b=>b[1]).join('　'):'';
@@ -1305,7 +1334,7 @@ function finish(win,ending){
 }
 
 // ================= UI =================
-function updateDaily(){const el=$('dailyMod');if(el)el.innerHTML='<b style="color:#e0a030">今日のルール：'+MOD.name+'</b><br>'+MOD.desc;}
+function updateDaily(){const el=$('dailyMod');if(el)el.innerHTML='<b>今日のルール：'+MOD.name+'</b>　'+MOD.desc;renderOp();renderMissions();const st=$('streakChip');if(st)st.textContent='🔥 '+(SAVE.streak||1)+'日連続';}
 function showScreen(id){updateDaily();setTimeout(checkRotate,0);for(const s of ['lobby','roles','result','archive','shop','coop','upg','settings'])$(s).hidden=s!==id;const inGame=id===null;$('hud').hidden=!inGame;G.screen=id;updateTouchUI();}
 function updateTouchUI(){const play=G.state==='play'||G.state==='doc'||G.state==='shoot';$('touch').hidden=!(isTouch&&play&&!G.paused);$('stickZone').hidden=!(isTouch&&(G.state==='play'||G.state==='shoot')&&!G.paused);$('kbHelp').hidden=isTouch;}
 function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),2200);}
@@ -1410,7 +1439,7 @@ function startGame(){
  if(!roleOwned(role.id))role=ROLES.find(r=>r.id==='scout');
  Snd.init();S.click();goFullscreen();badge('first');G.everCaught=false;G.runBadges=[];
  for(const d of docs){d.got=false;d.firstTime=false;}
- Object.assign(G,{runT:0,docsRun:new Set(),checkpoint:null,reported:false,shooting:false,kits:0,echoDefeated:false,bossDown:false});G.bag=newBag2(newBag());applyStock();
+ Object.assign(G,{hurtN:0,alertN:0,shorts:0,cqcN:0,dread:0,logs:[],runT:0,docsRun:new Set(),checkpoint:null,reported:false,shooting:false,kits:0,echoDefeated:false,bossDown:false});G.bag=newBag2(newBag());applyStock();
  G.depth=depth();const pro=PROLOGUE.slice();
  if(G.depth>=1)pro.splice(3,0,['二度目の潜入','前回の調査で、ECHO-01は回収できなかった。\n本部は、再びあなたを送り込んだ。']);
  if(G.depth>=2)pro.splice(pro.length-1,0,['潜航深度 '+G.depth,'潜るたびに、艦内の音が近くなっている気がする。\n……あれは、あなたを覚えているのかもしれない。']);
@@ -1420,6 +1449,7 @@ function startGame(){
 }
 function waitHost(){G.state='story';$('story').hidden=false;$('story').onclick=null;$('storyTag').textContent='接続';$('storyText').textContent='ホストの潜入を待っています……';$('storyImg').hidden=true;}
 function startChapter(n){
+ if(n===1)setTimeout(()=>spawnLogs(),50);
  if(n===1)setTimeout(()=>toast('今日のルール：'+MOD.name+'　'+MOD.desc),2600);
  Snd.init();goFullscreen();mapSetup(Net.on&&!Net.host?WIDE:(SAVE.mapMode==='wide'||Net.on),!Net.on&&(SAVE.mapMode==='deck'?'deck':SAVE.mapMode==='tower'?'tower':false));
  if(Net.on&&Net.host){Net.cid++;P2=P2||newPartner();if(!PARTNERS.length)PARTNERS=[P2];for(const q of PARTNERS){q.down=false;q.hp=null;q.bandUsed=false;q.seen=false;}}
@@ -1459,7 +1489,7 @@ function startChapter(n){
  saveCheckpoint();
 }
 function advanceChapter(n){
- G.ch=n;if(soloFloors()){setupHunters(n);setupGuards(n);spawnPickups(n);setupSpikes(n);}
+ mission('floor');G.ch=n;if(soloFloors()){setupHunters(n);setupGuards(n);spawnPickups(n);setupSpikes(n);}
  if(n===2){
   chapterCard(2);netEv('card',2);G.spotted=false;schedule(1,()=>radio(WIDE?RADIO.w2:RADIO[2]));
   G.breakoutFn=(Net.vs||!Net.on)?null:echoBreakout;if(0)schedule(8,()=>{
@@ -1572,7 +1602,7 @@ function update(dt){
  for(const g of gates)g.anim=lerp(g.anim,g.open?1:0,Math.min(1,dt*2.5));
  if(G.state==='play'){
   G.runT+=dt;
-  if(G.freezeT>0){G.freezeT-=dt;}else if(Net.on&&!Net.host)guestUpdate(dt);else{updatePlayer(dt);updateEcho(dt);updateExtras(dt);updateGuards(dt);updateHunters(dt);updateSpikes(dt);exitTick();healTick(dt);chapterGuard(dt);shadowTick(dt);if(!(Net.on&&Net.vs&&!Net.host))tipsTick(dt);updateBoss(dt);updateOutage(dt);updateGimmicks(dt);if(Net.on&&P.downed&&!PARTNERS.some(q=>q&&q.here&&!q.down))caught();}
+  if(G.freezeT>0){G.freezeT-=dt;}else if(Net.on&&!Net.host)guestUpdate(dt);else{updatePlayer(dt);updateEcho(dt);updateExtras(dt);updateGuards(dt);updateHunters(dt);updateSpikes(dt);exitTick();healTick(dt);chapterGuard(dt);dreadTick(dt);shadowTick(dt);if(!(Net.on&&Net.vs&&!Net.host))tipsTick(dt);updateBoss(dt);updateOutage(dt);updateGimmicks(dt);if(Net.on&&P.downed&&!PARTNERS.some(q=>q&&q.here&&!q.down))caught();}
   partnerTick(dt);
   if(P.locker&&G.lockChase&&E&&E.state!=='chase'&&!E.rip){G.lockChase=false;badge('locker');}
   const chasing=E.state==='chase'||!!E.lunge;{const want=(G.hunters||[]).some(h=>h.st==='chase'&&h.stun<=0)||chasing||G.unlocked&&E.state==='search'||G.phase==='alert'||G.phase==='evasion';if(want)G.chaseHold=2.5;else G.chaseHold=Math.max(0,(G.chaseHold||0)-dt);Snd.setChase(G.chaseHold>0);}
@@ -1640,7 +1670,7 @@ function render(){
  // shutters & gates
  for(const s of shutters)if(inView(s.x,s.y))drawShutter(s);
  for(const g of gates)if(inView(g.x,g.y))drawGate(g);
- drawPrints(inView);if(Net.on&&Net.vs&&!Net.host)drawRipples();drawGimmicks(inView);drawExtras(inView);drawExit();drawSpikes(inView);drawHunters(inView);drawGuards(inView,false);drawBoss(inView);drawLootGlints(inView);drawHat();
+ drawPrints(inView);if(Net.on&&Net.vs&&!Net.host)drawRipples();drawGimmicks(inView);drawExtras(inView);drawLogs(inView);drawExit();drawSpikes(inView);drawHunters(inView);drawGuards(inView,false);drawBoss(inView);drawLootGlints(inView);drawHat();
  for(const b of (G.breakers||[])){if(!inView(b.x,b.y))continue;ctx.fillStyle=b.on?'#50d080':'#ff4030';ctx.beginPath();ctx.arc((b.x+0.5)*T,(b.y+0.25)*T,4,0,TAU);ctx.fill();ctx.fillStyle=b.on?'#8a8f86':'#4a4e46';ctx.save();ctx.translate((b.x+0.5)*T,(b.y+0.5)*T);ctx.rotate(b.on?-0.6:0.6);ctx.fillRect(-2,-12,4,12);ctx.restore();}
  // docs
  for(const d of docs)if(!d.got&&inView(d.x,d.y))drawDocItem(d);
@@ -1701,6 +1731,7 @@ function render(){
  if(G.flash>0){ctx.fillStyle=G.state==='caught'?`rgba(120,0,0,${G.flash})`:`rgba(255,240,220,${G.flash*0.5})`;ctx.fillRect(0,0,VW,VH);}
  if(G.whiteT>0){const a=Math.min(1,G.whiteT/((G.whiteMax||4)*0.5));ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.fillRect(0,0,VW,VH);}
  {const wv=G.whiteT>0;if(wv!==G._wv){G._wv=wv;$('mini').style.visibility=wv?'hidden':'';}}
+ drawDreadFx();
  if(G.state==='caught'){drawJumpscare(G.caughtT);}
  if(G.state==='escape'){const k2=clamp((G.escapeT-1.8)/1.8,0,1);ctx.fillStyle=`rgba(0,0,0,${k2})`;ctx.fillRect(0,0,VW,VH);}
 }
@@ -1901,7 +1932,7 @@ function lobbyTick(dt){
  if(G.state!=='lobby')return;twitchT-=dt;
  if(twitchT<=0){twitchT=rand(5,10);const el=$('exhibit');el.classList.remove('twitch');void el.offsetWidth;el.classList.add('twitch');if(Snd.ready){S.servo(0.5,0.3);setTimeout(()=>S.clank(0.35,0.3,false),180);}}
 }
-$('btnStart').onclick=()=>{Snd.init();S.click();buildRoles();showScreen('roles');};
+$('btnStart').onclick=()=>{Snd.init();S.click();buildRoles();buildContracts();showScreen('roles');};
 $('btnArchive').onclick=()=>{Snd.init();S.click();buildArchive();showScreen('archive');};
 $('btnShop').onclick=()=>{Snd.init();S.click();buildShop();updateCredits();showScreen('shop');};
 $('btnGo').onclick=()=>startGame();
@@ -2713,7 +2744,7 @@ function useItem(){
  if(!(b[b.sel]>0)){selItem();if(!(b[b.sel]>0)){S.deny();toast('アイテムを持っていない');return;}}
  const k=b.sel;b[k]--;
  if(useItem2(k)){if(!(b[k]>0))selItem();return;}
- if(k==='flash'){if(Net.on&&Net.vs&&Net.host)netEv('white',4.5,'f');if(Net.on&&!Net.host&&!Net.vs)netAct('flash',r2(P.x),r2(P.y));G.flash=Math.max(G.flash,0.7);S.shotgun();vib([60,30,160],'fl',300);sparks(P.x,P.y,20,6);
+ if(k==='flash'){mission('flash');if(Net.on&&Net.vs&&Net.host)netEv('white',4.5,'f');if(Net.on&&!Net.host&&!Net.vs)netAct('flash',r2(P.x),r2(P.y));G.flash=Math.max(G.flash,0.7);S.shotgun();vib([60,30,160],'fl',300);sparks(P.x,P.y,20,6);
   if(E&&Math.hypot(E.x-P.x,E.y-P.y)<7.5&&los(P.x,P.y,E.x,E.y)){E.stunT=3.2;E.lunge=null;E.act=null;S.screech();toast('閃光弾でECHO-01がひるんだ！');badge('shot');}
   for(const c of G.crawl||[])if(Math.hypot(c.x-P.x,c.y-P.y)<7&&los(P.x,P.y,c.x,c.y))c.stun=5;stunHunters(P.x,P.y,7,5,true);
   {let hit=0;for(const g of G.guards||[])if(g.sleep<=0&&Math.hypot(g.x-P.x,g.y-P.y)<8.5&&los(P.x,P.y,g.x,g.y)){g.sleep=g.type==='drone'?6:5;g.sus=0;hit++;}if(hit)toast('閃光弾で警備がひるんだ！今のうちに逃げろ');}
@@ -2836,7 +2867,7 @@ function guardSees(g){
  let k=(1.9-d/rng)*(P.sprint?1.6:1)*(P.moving?1:0.7)*(eqS()==='suit_sneak'?0.7:1)*(LX().st||1)*[0.7,1,1.3][DIFK()];if(P.box){k*=P.moving?0.35:0;}return k;
 }
 function setPhase(p){if(G.phase===p)return;const prev=G.phase;G.phase=p;
- if(p==='alert'){G.phaseT=0;for(const g of G.guards||[])g.fireT=Math.max(g.fireT,1.2);S.stinger();vib([120,60,120],'alert',1500);toast('見つかった！　警報発令');
+ if(p==='alert'){G.alertN=(G.alertN||0)+1;G.phaseT=0;for(const g of G.guards||[])g.fireT=Math.max(g.fireT,1.2);S.stinger();vib([120,60,120],'alert',1500);toast('見つかった！　警報発令');
   if(prev==='normal'||prev==='caution'){if(G.chaff<=0)callReinforce();if(E&&!E.dormant){E.last=[P.x,P.y];if(E.state!=='chase'){setEchoState('search');E.searchT=6;}}}}
  else if(p==='evasion'){G.phaseT=18;}else if(p==='caution'){G.phaseT=28;toast('警戒態勢が続いている');}else{G.phaseT=0;toast('警戒が解除された');}
 }
@@ -2891,10 +2922,89 @@ function updateGuards(dt){
   if(dd.t>0&&E&&!E.dormant&&Math.hypot(dd.x-E.x,dd.y-E.y)<0.9){dd.t=0;toast('ECHO-01には麻酔が効かない！');}}
  G.darts=G.darts.filter(d=>d.t>0);
 }
-function hurtPlayer(n){if(P&&P.isP2){partnerHurt(n,P.src);return;}if(G.dev&&G.dev.god)return;P.hp=(P.hp==null?4:P.hp)-n;P.inv=1.3;G.shake=9;G.flash=0.35;vib([90,40,90],'hurt',300);S.hurtSpark();
+function hurtPlayer(n){if(P&&P.isP2){partnerHurt(n,P.src);return;}if(G.dev&&G.dev.god)return;G.hurtN=(G.hurtN||0)+1;P.hp=(P.hp==null?4:P.hp)-n;P.inv=1.3;G.shake=9;G.flash=0.35;vib([90,40,90],'hurt',300);S.hurtSpark();
  if(P.hp<=0){if(P.bandage>0){P.bandage--;if(G.kits>0)G.kits--;P.hp=2;toast('救急キットで持ち直した');return;}G.capturedBy='guard';caught();}}
 function nearGuardCQC(){if(!G.guards)return null;for(const g of G.guards){const rod=eqW()==='w_rod';if(g.sleep>0||g.state==='alert'||(!GT[g.type].cqc&&!rod))continue;const d=Math.hypot(g.x-P.x,g.y-P.y);if(d<1.15){const behind=Math.abs(angDiff(g.a,Math.atan2(P.y-g.y,P.x-g.x)))>1.9;if(behind||g.state==='sus'||rod)return {g,d};}}return null;}
 function killCam(c){c.dead=true;const cy=c.y+0.5+(c.dir>0?0.45:-0.45);sparks(c.x+0.5,cy,16,5);S.crash(0.35,0);vib([40,30,60]);toast('監視カメラを壊した');}
+// ===== meta layer: operator level, daily missions, contracts =====
+const XPNEED=lv=>120+lv*70;
+const opLv=()=>SAVE.oplv||1;
+function addXP(n){if(n<=0)return;SAVE.xp=(SAVE.xp||0)+n;let up=0,cr=0;
+ while(SAVE.xp>=XPNEED(opLv())){SAVE.xp-=XPNEED(opLv());SAVE.oplv=opLv()+1;up++;const c=100+opLv()*10;SAVE.credits+=c;cr+=c;unlockLogByLevel();}
+ save();if(up){badgeQ.push(['lv','オペレーター Lv.'+opLv()+' に昇格','報酬 +'+cr+' CREDIT','']);if(badgeQ.length===1)nextBadge();}renderOp();updateCredits();}
+const MPOOL=[
+ {id:'cqc3',evt:'cqc',need:3,label:'警備兵を背後から3人気絶させる',xp:60,cr:60},
+ {id:'short2',evt:'short',need:2,label:'ロボットをショートで2体止める',xp:70,cr:70},
+ {id:'doc5',evt:'doc',need:5,label:'資料を合計5つ回収する',xp:50,cr:50},
+ {id:'floor3',evt:'floor',need:3,label:'フロアを3回降りる',xp:70,cr:80},
+ {id:'hide2',evt:'hide',need:2,label:'ロッカーに2回隠れる',xp:40,cr:40},
+ {id:'flash3',evt:'flash',need:3,label:'閃光弾を3回使う',xp:40,cr:40},
+ {id:'esc1',evt:'escape',need:1,label:'脱出に成功する',xp:90,cr:100},
+ {id:'ghost1',evt:'ghost',need:1,label:'一度も警報を鳴らさず脱出する',xp:140,cr:160},
+ {id:'speed1',evt:'speed',need:1,label:'10分以内に脱出する',xp:110,cr:120},
+ {id:'log1',evt:'log',need:1,label:'音声ログを1つ見つける',xp:60,cr:60}];
+function dailyMissions(){const d=new Date();let k=d.getFullYear()*372+d.getMonth()*31+d.getDate();const idx=[];while(idx.length<3){k=(k*1103515245+12345)&0x7fffffff;const i=(k>>8)%MPOOL.length;if(!idx.includes(i))idx.push(i);}return idx.map(i=>MPOOL[i]);}
+function dmState(){const key=new Date().toDateString();if(!SAVE.dm||SAVE.dm.d!==key){SAVE.dm={d:key,p:{},c:{},chest:0};save();}return SAVE.dm;}
+function mission(evt,n){n=n||1;const st=dmState();let hit=false;for(const m of dailyMissions())if(m.evt===evt&&!st.c[m.id]){const was=st.p[m.id]||0;st.p[m.id]=Math.min(m.need,was+n);if(was<m.need&&st.p[m.id]>=m.need){toast('ミッション達成：'+m.label);hit=true;}}if(hit)S.paper();save();renderMissions();}
+function claimMission(id){const st=dmState();const m=dailyMissions().find(q=>q.id===id);if(!m||st.c[id]||(st.p[id]||0)<m.need)return;st.c[id]=1;SAVE.credits+=m.cr;S.paper();
+ if(dailyMissions().every(q=>st.c[q.id])&&!st.chest){st.chest=1;const b=Math.floor(120+Math.random()*280);SAVE.credits+=b;setTimeout(()=>toast('全ミッション達成！ ボーナス +'+b+' CREDIT'),600);}
+ save();addXP(m.xp);updateCredits();renderMissions();}
+function renderMissions(){const el=$('missions');if(!el)return;const st=dmState();
+ el.innerHTML=dailyMissions().map(m=>{const p=st.p[m.id]||0,done=p>=m.need,cl=!!st.c[m.id];return '<div class="mi'+(done?' done':'')+(cl?' cl':'')+'"><div class="mt">'+m.label+'</div><div class="mb"><i style="width:'+Math.min(100,p/m.need*100)+'%"></i></div><div class="mr">'+(cl?'受取済':done?'<button data-mid="'+m.id+'">受け取る +'+m.cr+'CR</button>':p+'/'+m.need)+'</div></div>';}).join('');
+ el.querySelectorAll('button[data-mid]').forEach(b=>b.onclick=()=>claimMission(b.dataset.mid));}
+function renderOp(){const a=$('opLv');if(!a)return;const need=XPNEED(opLv());a.textContent='Lv.'+opLv();$('opBar').style.width=Math.min(100,(SAVE.xp||0)/need*100)+'%';$('opXp').textContent=(SAVE.xp||0)+' / '+need+' XP';}
+const CONTRACTS=[
+ {id:'nodmg',name:'無傷',desc:'一度もダメージを受けず脱出',xp:90,cr:150,ok:()=>!G.hurtN},
+ {id:'ghost',name:'幽霊',desc:'一度も警報を鳴らさず脱出',xp:100,cr:160,ok:()=>!G.alertN},
+ {id:'rush',name:'速攻',desc:'8分以内に脱出',xp:80,cr:120,ok:()=>G.runT<480},
+ {id:'collect',name:'収集家',desc:'資料を7つ以上集めて脱出',xp:80,cr:130,ok:()=>G.docsRun.size>=7},
+ {id:'tech',name:'破壊工作',desc:'背後撃破・ショートを合計5回',xp:70,cr:110,ok:()=>(G.shorts||0)+(G.cqcN||0)>=5}];
+function buildContracts(){const box=$('ctBox');if(!box)return;const sel=SAVE.contracts||[];box.innerHTML='<span>契約</span>'+CONTRACTS.map(c=>'<button class="rchip'+(sel.includes(c.id)?' sel':'')+'" data-cid="'+c.id+'" title="'+c.desc+'">'+c.name+'<small>+'+c.cr+'CR</small></button>').join('')+'<em id="ctDesc">'+(sel.length?sel.map(id=>{const c=CONTRACTS.find(q=>q.id===id);return c?c.name+'：'+c.desc:'';}).join('　/　'):'契約を選ぶと、達成でCREDITとXPのボーナス（最大2つ）')+'</em>';
+ box.querySelectorAll('[data-cid]').forEach(b=>b.onclick=()=>{let a=SAVE.contracts||[];const id=b.dataset.cid;if(a.includes(id))a=a.filter(x=>x!==id);else{if(a.length>=2){S.deny();toast('契約は2つまで');return;}a=a.concat(id);}SAVE.contracts=a;save();S.click();buildContracts();});}
+// ===== story: voice logs =====
+const LOGS=[
+ {id:'l1',title:'LOG 01　通信士の最後の報告',text:'……こちら通信室。艦長、聞こえますか。\nB3Fの隔壁が、内側から叩かれています。\n叩く間隔が、人間のそれより――揃いすぎている。\n\n（以降、ノイズ）'},
+ {id:'l2',title:'LOG 02　整備士の独り言',text:'冷却水の配管に、爪の跡があった。\n6本。いや、数え直すたびに本数が増える。\n俺の数え方が悪いんだと思いたい。'},
+ {id:'l3',title:'LOG 03　ロッドの録音',text:'ロアは、まだ私の声に反応する。\nだから私は毎晩、話しかける。\n\n……返事が、日に日に、私の声に似てきた。'},
+ {id:'l4',title:'LOG 04　食堂の掲示',text:'【お願い】夜勤明けに、誰かが厨房の冷蔵庫を開けている。\n中身は減っていない。ただ、毎朝、扉が内側から閉まっている。'},
+ {id:'l5',title:'LOG 05　警備兵の日誌',text:'巡回中、背後で自分の足音が一歩だけ遅れて聞こえる。\n振り向くと、誰もいない。\n振り向かなければ、足音は止まらない。'},
+ {id:'l6',title:'LOG 06　艦長の私信',text:'積荷の正体を知っていたのは、私だけだった。\n乗組員には「兵器」と伝えた。\n本当は――あれは、まだ「子ども」だ。'},
+ {id:'l7',title:'LOG 07　医務室の記録',text:'被験体の脳波が、乗組員の呼吸と同期している。\n私が息を止めると、あれも止まる。\n怖くて、息を止めるのをやめた。'},
+ {id:'l8',title:'LOG 08　防犯カメラ #14',text:'03:12　廊下を歩く影を確認。\n03:13　影は2つに増えた。\n03:14　カメラのレンズが、こちらを向いた。\n\n（このカメラは固定式である）'},
+ {id:'l9',title:'LOG 09　研究員Kのメモ',text:'ECHO-01は「音」を覚える。\n人の足音、扉の音、そして――悲鳴。\n覚えた音は、後で、別の場所から返ってくる。'},
+ {id:'l10',title:'LOG 10　ロアの声',text:'……おとうさん。\nくらい。さむい。\nみんな、いっしょに、いてくれるって、いった。\nだから、ぼく、みんなを、さがしてる。'},
+ {id:'l11',title:'LOG 11　最終隔壁',text:'この音声を聞いている者へ。\n脱出艇は1基しかない。\n――あれは、乗組員の数を、数えている。\n乗せる人数を間違えるな。'},
+ {id:'l12',title:'LOG 12　あなたへ',text:'潜るたびに、艦は少しずつ「あなた」を覚える。\n歩き方。息づかい。隠れる場所。\n\n次に会うとき、あれは、あなたの癖で、あなたを探す。'}];
+function unlockLogByLevel(){SAVE.logs=SAVE.logs||[];if(opLv()%2!==0)return;const nx=LOGS.find(l=>!SAVE.logs.includes(l.id));if(nx){SAVE.logs.push(nx.id);setTimeout(()=>toast('音声ログが解析された：'+nx.title),1200);}}
+function spawnLogs(){G.logs=[];SAVE.logs=SAVE.logs||[];if(Net.on&&!Net.host||Net.vs)return;const rest=LOGS.filter(l=>!SAVE.logs.includes(l.id));if(!rest.length)return;
+ const ids=[];while(ids.length<Math.min(2,rest.length)){const l=rest[Math.floor(Math.random()*rest.length)];if(!ids.includes(l.id))ids.push(l.id);}
+ for(const id of ids){for(let t=0;t<80;t++){const r=ROOMS[1+Math.floor(Math.random()*(ROOMS.length-1))];if(r.id==='hangar'||r.id==='main'||r.sec==='研究区画')continue;const x=r.x+Math.floor(Math.random()*r.w),y=r.y+Math.floor(Math.random()*r.h);if(tile(x,y)!==FLOOR)continue;G.logs.push({x,y,id,got:false});break;}}}
+function drawLogs(inView){for(const l of G.logs||[]){if(l.got||!inView(l.x+0.5,l.y+0.5))continue;const x=(l.x+0.5)*T,y=(l.y+0.5)*T,p=0.6+0.4*Math.sin(G.t*3+l.x);ctx.save();ctx.translate(x,y);ctx.globalCompositeOperation='lighter';glow(ctx,'amber',0,0,24,0.5*p);ctx.globalCompositeOperation='source-over';
+ ctx.fillStyle='#1a1f24';ctx.fillRect(-8,-6,16,12);ctx.strokeStyle='#e0a030';ctx.lineWidth=1.4;ctx.strokeRect(-8,-6,16,12);ctx.fillStyle='#e0a030';ctx.beginPath();ctx.arc(-3,0,2.4,0,TAU);ctx.arc(3,0,2.4,0,TAU);ctx.fill();ctx.restore();}}
+function playLog(l){const d=LOGS.find(q=>q.id===l.id);if(!d)return;l.got=true;S.staticBurst();vib([30,40,30]);SAVE.logs=SAVE.logs||[];if(!SAVE.logs.includes(d.id)){SAVE.logs.push(d.id);save();}mission('log');openDoc({title:d.title,img:'',text:d.text,id:'log_'+d.id},false);}
+// ===== dread: tension director (anticipation, false alarms, vignette) =====
+const dreadLv=()=>SAVE.dreadLv==null?1:SAVE.dreadLv;
+function dreadTick(dt){
+ if(!P||G.state!=='play'){G.dread=Math.max(0,(G.dread||0)-dt*0.3);return;}
+ let t=0.1+(G.ch||1)*0.05;
+ if(E&&!E.dormant){const d=Math.hypot(E.x-P.x,E.y-P.y);t+=clamp(1-d/14,0,1)*0.5;if(E.state==='chase')t+=0.25;}
+ for(const h of G.hunters||[])if(h.st==='chase')t+=0.15;
+ if(G.phase==='alert')t+=0.2;else if(G.phase==='caution')t+=0.08;
+ if(P.hp!=null&&P.hp<=1)t+=0.15;if(G.blackout>0)t+=0.1;
+ t=clamp(t,0,1);const cur=G.dread||0;G.dread=cur+(t-cur)*Math.min(1,dt*(t>cur?1.2:0.35));
+ G.dTick=(G.dTick==null?rand(25,45):G.dTick)-dt*(0.5+G.dread*2.5);
+ if(G.dTick<=0&&dreadLv()>0){G.dTick=rand(35,80);dreadEvent();}
+}
+function dreadEvent(){const pan=Math.random()<0.5?-0.8:0.8,r=Math.random();
+ if(r<0.4){S.clank(0.5,pan);setTimeout(()=>S.clank(0.4,pan),520);setTimeout(()=>S.clank(0.35,pan),1000);}
+ else if(r<0.75){S.servo(0.35,pan);setTimeout(()=>S.staticBurst(),900);}
+ else{G.flick=1;S.servo(0.45,pan);setTimeout(()=>S.pound(0.5,pan),700);}}
+function drawDreadFx(){const lv=dreadLv(),d=G.dread||0;if(!lv||d<0.12||G.state==='shoot')return;const k=lv===2?1.25:0.8;
+ ctx.save();ctx.setTransform(DPR*SCALE,0,0,DPR*SCALE,0,0);
+ const pulse=0.5+0.5*Math.sin(G.t*(2+d*5)),a=clamp((0.16+d*0.7*(0.7+0.3*pulse))*k,0,0.88);
+ const g=ctx.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*(0.48-d*0.14),VW/2,VH/2,Math.max(VW,VH)*0.78);g.addColorStop(0,'rgba(70,0,0,0)');g.addColorStop(1,'rgba(125,0,0,'+a+')');ctx.fillStyle=g;ctx.fillRect(0,0,VW,VH);
+ if(d>0.6&&!LOWQ&&Math.random()<0.25){ctx.globalCompositeOperation='screen';ctx.fillStyle='rgba(255,0,0,0.045)';ctx.fillRect(rand(-3,3),0,VW,VH);ctx.fillStyle='rgba(0,120,255,0.045)';ctx.fillRect(rand(-3,3),0,VW,VH);}
+ ctx.restore();}
 const MODS=[
  {id:'quiet',name:'静かな夜',desc:'敵の視界と聴覚が20%狭い',vis:0.8},
  {id:'hound',name:'猛犬の日',desc:'犬・コウモリ・クモが速い。報酬+30%',spd:1.12,cred:1.3},
@@ -2915,12 +3025,12 @@ function applyShort(o,isH,noCredit){
  for(const h of G.hunters||[])if(h!==o&&h.sleep<=0&&!h.boss&&Math.hypot(h.x-o.x,h.y-o.y)<3.5){h.sleep=3;h.shorted=true;chain++;}
  for(const g of G.guards||[])if(g!==o&&g.type==='drone'&&g.sleep<=0&&Math.hypot(g.x-o.x,g.y-o.y)<3.5){g.sleep=4;g.shorted=true;chain++;}
  const gain=(boss?60:15)*(MOD.bonus||1);
- if(!noCredit){SAVE.credits+=gain;save();toast(chain?`ショート連鎖！ ${chain+1}体停止 +${gain} CREDIT`:`ショート成功 +${gain} CREDIT`);if((G.shorts||0)>=3)badge('short');}
+ if(!noCredit){mission('short');SAVE.credits+=gain;save();toast(chain?`ショート連鎖！ ${chain+1}体停止 +${gain} CREDIT`:`ショート成功 +${gain} CREDIT`);if((G.shorts||0)>=3)badge('short');}
 }
 function doShort(it){const o=it.h||it.g;if(!o)return;
- if(Net.on&&!Net.host){netAct('short',it.h?'h':'g',o.id);shortFx(o);const gain=(o.boss?60:15)*(MOD.bonus||1);SAVE.credits+=gain;save();G.shorts=(G.shorts||0)+1;toast(`ショート成功 +${gain} CREDIT`);if(G.shorts>=3)badge('short');return;}
+ if(Net.on&&!Net.host){netAct('short',it.h?'h':'g',o.id);shortFx(o);const gain=(o.boss?60:15)*(MOD.bonus||1);mission('short');SAVE.credits+=gain;save();G.shorts=(G.shorts||0)+1;toast(`ショート成功 +${gain} CREDIT`);if(G.shorts>=3)badge('short');return;}
  applyShort(o,!!it.h);}
-function cqc(g){g.sleep=60;g.sus=0;g.state='patrol';S.pound(0.6,0);vib([50,30,80]);sparks(g.x,g.y,6,3);G.cqcN=(G.cqcN||0)+1;const gain=8*(MOD.bonus||1);SAVE.credits+=gain;save();toast(`背後から気絶させた +${gain} CREDIT`);}
+function cqc(g){mission('cqc');g.sleep=60;g.sus=0;g.state='patrol';S.pound(0.6,0);vib([50,30,80]);sparks(g.x,g.y,6,3);G.cqcN=(G.cqcN||0)+1;const gain=8*(MOD.bonus||1);SAVE.credits+=gain;save();toast(`背後から気絶させた +${gain} CREDIT`);}
 function fireDart(){const a=P.face,rf=eqW()==='w_rifle';G.darts.push({x:P.x+Math.cos(a)*0.4,y:P.y+Math.sin(a)*0.4,vx:Math.cos(a)*(rf?22:14),vy:Math.sin(a)*(rf?22:14),t:rf?1.1:0.9});S.click(1);vib(20);}
 function useItem2(k){
  if(k==='dart'){fireDart();return true;}
@@ -3377,7 +3487,7 @@ function frame(now){
 }
 $('exhibitImg').src=IMG.omega||'';
 buildMiniBase();resize();updateCredits();muteTxt();showScreen('lobby');setTimeout(dailyBonus,600);
-$('fsBtn').onclick=()=>goFS();$('brBtn').onclick=()=>{const v=SAVE.bright==null?(isTouch?1:0):SAVE.bright;SAVE.bright=(v+1)%3;save();brTxt();};$('vibBtn').onclick=()=>{SAVE.vib=SAVE.vib===false;save();vibTxt();vib(60);};$('fsLobby').onclick=()=>{Snd.init();goFS();};$('fsClose').onclick=()=>{$('fsHelp').hidden=true;};$('dailyOk').onclick=()=>{S.click();$('daily').hidden=true;};
+$('fsBtn').onclick=()=>goFS();$('brBtn').onclick=()=>{const v=SAVE.bright==null?(isTouch?1:0):SAVE.bright;SAVE.bright=(v+1)%3;save();brTxt();};$('vibBtn').onclick=()=>{SAVE.vib=SAVE.vib===false;save();vibTxt();vib(60);};const dTxt=()=>{const b=$('dreadBtn');if(b)b.textContent='恐怖演出：'+['オフ','標準','強'][dreadLv()];};dTxt();$('dreadBtn').onclick=()=>{SAVE.dreadLv=(dreadLv()+1)%3;save();dTxt();S.click();};$('fsLobby').onclick=()=>{Snd.init();goFS();};$('fsClose').onclick=()=>{$('fsHelp').hidden=true;};$('dailyOk').onclick=()=>{S.click();$('daily').hidden=true;};
 if(navigator.standalone||matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches){document.body.classList.add('app');}
 requestAnimationFrame(frame);
 window.__sub={Net,get P2(){return P2;},SH,G,get P(){return P;},get E(){return E;},docs,startGame,startChapter,advanceChapter,LOCKERS,gates,answerReport,openDoc,closeDoc,findPath,setEchoState,doUnlock,shutters,tile,ROLES,setRole:r=>{role=ROLES.find(x=>x.id===r)||role;}};
