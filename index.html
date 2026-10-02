@@ -351,7 +351,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
  </div>
  <div id="opCard"><div class="opTop"><b id="opLv">Lv.1</b><span class="opName">OPERATOR</span><span id="streakChip"></span></div><div class="opBar"><i id="opBar"></i></div><div id="opXp" class="opXp"></div>
   <div class="opRule" id="dailyMod"></div><div class="opH">本日のミッション</div><div id="missions"></div></div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 4.1（新フロア追加）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 4.2（新フロア追加）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -1235,7 +1235,7 @@ function nearestInteract(){
  if(G.ch===2)for(const b of G.breakers)if(!b.on)cand({type:'breaker',b,label:'配電盤を起動する'},Math.hypot(b.x+0.5-P.x,b.y+0.5-P.y),3);
  return best;
 }
-function breakerOn(b){b.on=true;if(G.breakoutFn){const f=G.breakoutFn;G.breakoutFn=null;schedule(2.5,f);schedule(0.8,()=>radio('……今の起動音で、何かが目を覚ました。'));}S.breaker();G.shake=5;makeNoise(b.x+0.5,b.y+0.5,14);sparks(b.x+0.5,b.y+0.5,10,5);const n=G.breakers.filter(q=>q.on).length;if(n<3)radio(`配電盤 ${n}/3 起動。起動音は艦内に響く……気をつけろ。`);else if(soloFloors())setExit(3);else advanceChapter(3);}
+function breakerOn(b){b.on=true;if(G.breakoutFn){const f=G.breakoutFn;G.breakoutFn=null;schedule(2.5,f);schedule(0.8,()=>radio('……今の起動音で、何かが目を覚ました。'));}S.breaker();G.shake=5;makeNoise(b.x+0.5,b.y+0.5,14);sparks(b.x+0.5,b.y+0.5,10,5);const n=G.breakers.filter(q=>q.on).length;if(n<3){radio(`配電盤 ${n}/3 起動。起動音は艦内に響く……気をつけろ。`);if(n===1)beat('br1','この音……聞かれてる。壁の向こうで、何かが一斉に動きを止めた。',MN,6);if(n===2)beat('br2','あと1つ。……ねえ、足音を数えて。あなたの足音より、一つ多い。',MN,6);}else if(soloFloors())setExit(3);else advanceChapter(3);}
 function doAction(){
  if(G.state==='shoot'){shFlash();return;}
  if(Net.on&&!Net.host&&Net.vs){if(G.state==='play'&&!(G.vsHoldL>0)){Net.lseq=(Net.lseq||0)+1;S.servo(0.6,0);}return;}
@@ -1258,7 +1258,7 @@ function doAction(){
   case 'repair':{P.work={t:0,dur:1.6,repair:it.s,done:()=>{if(Net.on&&!Net.host){netAct('rep',shutters.indexOf(it.s));toast('シャッターを修理した');return;}it.s.broken=false;it.s.closed=false;S.shutter(false,0.7,0);toast('シャッターを修理した');}};S.click();break;}
   case 'brokenInfo':S.deny();toast('壊れている。整備士なら修理できる');break;
   case 'gate':S.deny();toast(it.g.grp==='hangar'?'迎えのミニサブマリンはまだ来ていない':'研究区画の隔壁。電源が無いと開かない');break;
-  case 'hide':{mission('hide');{G.habit=G.habit||{};const k=it.L.x+','+it.L.y;G.habit[k]=(G.habit[k]||0)+1;if(G.habit[k]===2)setTimeout(()=>toast('同じロッカーに何度も隠れている……'),600);}
+  case 'hide':{beat('hide1','……息を殺して。数えちゃだめ。数えると、あれに聞こえる。',MN,1.5);mission('hide');{G.habit=G.habit||{};const k=it.L.x+','+it.L.y;G.habit[k]=(G.habit[k]||0)+1;if(G.habit[k]===2)setTimeout(()=>toast('同じロッカーに何度も隠れている……'),600);}
    if(E&&!E.dormant&&(E.state==='chase'||E.lunge)&&Math.hypot(E.x-P.x,E.y-P.y)<5){G.nearMiss=(G.nearMiss||0)+1;addXP(15);toast('危機一髪！ +15 XP');}
    G.lockChase=!!(E&&E.state==='chase');P.locker=it.L;P.hidden=true;P.vx=P.vy=0;S.locker();if(E&&(E.state==='chase'||E.lunge)&&E.lostT<0.7&&Math.hypot(E.x-P.x,E.y-P.y)<7){E.rip=it.L;}break;}
   case 'unhide':{P.locker=null;P.hidden=false;P.inv=Math.max(P.inv,0.3);S.locker();break;}
@@ -1325,11 +1325,11 @@ function finish(win,ending){
  G.state='result';G.lastWin=win;clearRadio();$('rotate').hidden=true;
  const n=G.docsRun.size;let credits=n*20+(win?150:20)+Math.floor(G.runT/10)+(ending==='true'?200:0);credits=Math.round(credits*(MOD.cred||1));
  if(ending){SAVE.endings=SAVE.endings||[];if(!SAVE.endings.includes(ending))SAVE.endings.push(ending);}
- if(win){mission('escape');if(!G.alertN)mission('ghost');if(G.runT<600)mission('speed');badge('escape');if(n>=DOCS.length)badge('alldocs');if(ending==='true')badge('true');if(G.runT<480)badge('fast');if(!G.everCaught)badge('nocatch');if((SAVE.escapes||0)+1>=3)badge('depth3');}
+ if(win){mission('escape');if(!G.alertN)mission('ghost');if(G.runT<600)mission('speed');badge('escape');if(n>=DOCS.length)badge('alldocs');if(ending==='true'||ending==='deep')badge('true');if(ending==='deep')badge('deep');if(G.runT<480)badge('fast');if(!G.everCaught)badge('nocatch');if((SAVE.escapes||0)+1>=3)badge('depth3');}
  const newDocs=docs.filter(d=>d.got&&d.firstTime).length;credits+=newDocs*30;
  SAVE.credits+=credits;SAVE.best=Math.max(SAVE.best,n);if(win)SAVE.escapes++;save();
- $('resTitle').textContent=win?(ending==='true'?'TRUE END':'NORMAL END'):'GAME OVER';$('result').classList.toggle('lose',!win);
- $('resSub').textContent=win?(ending==='true'?'「エコー」':'ミニサブマリンで潜水艦を脱出した。'):`ECHO-01に捕まった。（${(CHAPTERS[G.ch]||{}).tag||''}）`;$('resRetry').textContent=win?'もう一度潜る':`${(CHAPTERS[G.ch]||{}).tag||''} からやり直す`;$('resRetry').disabled=false;if(Net.on&&!Net.host&&!win){$('resRetry').textContent='ホストの再開を待っています';$('resRetry').disabled=true;}
+ $('resTitle').textContent=win?(ending==='deep'?'FINAL END':ending==='true'?'TRUE END':'NORMAL END'):'GAME OVER';$('result').classList.toggle('lose',!win);
+ $('resSub').textContent=win?(ending==='deep'||ending==='true'?'「エコー」':'ミニサブマリンで潜水艦を脱出した。'):`ECHO-01に捕まった。（${(CHAPTERS[G.ch]||{}).tag||''}）`;$('resRetry').textContent=win?'もう一度潜る':`${(CHAPTERS[G.ch]||{}).tag||''} からやり直す`;$('resRetry').disabled=false;if(Net.on&&!Net.host&&!win){$('resRetry').textContent='ホストの再開を待っています';$('resRetry').disabled=true;}
  const m=Math.floor(G.runT/60),s=Math.floor(G.runT%60);
  {let pts=(win?40:10)+Math.min(20,n*2.2)+(G.everCaught?0:20)+Math.min(14,(G.shorts||0)*3+(G.cqcN||0)*2)+(G.runT<600?10:G.runT<900?5:0);const gr=pts>=90?'S':pts>=75?'A':pts>=55?'B':'C';$('rGrade').textContent=gr+'（'+Math.round(pts)+'）';$('rGrade').style.color=gr==='S'?'#ffd070':gr==='A'?'#7dffb0':gr==='B'?'#9fe6ff':'#d9d6cc';}
  {const gr0=($('rGrade').textContent||'C')[0];let xp=30+n*10+(win?100:0)+(G.ch||1)*15+(gr0==='S'?100:gr0==='A'?60:gr0==='B'?30:0);
@@ -1449,10 +1449,7 @@ function startGame(){
  Snd.init();S.click();goFullscreen();badge('first');G.everCaught=false;G.runBadges=[];
  for(const d of docs){d.got=false;d.firstTime=false;}
  Object.assign(G,{habit:{},nearMiss:0,hurtN:0,alertN:0,shorts:0,cqcN:0,dread:0,logs:[],runT:0,docsRun:new Set(),checkpoint:null,reported:false,shooting:false,kits:0,echoDefeated:false,bossDown:false});G.bag=newBag2(newBag());applyStock();
- G.depth=depth();const pro=PROLOGUE.slice();
- if(G.depth>=1)pro.splice(3,0,['二度目の潜入','前回の調査で、ECHO-01は回収できなかった。\n本部は、再びあなたを送り込んだ。']);
- if(G.depth>=2)pro.splice(pro.length-1,0,['潜航深度 '+G.depth,'潜るたびに、艦内の音が近くなっている気がする。\n……あれは、あなたを覚えているのかもしれない。']);
- if(G.depth>=3)pro.splice(pro.length-1,0,['警告','本部との通信に、知らない声が混ざるようになった。\nそれでも、あなたは潜る。']);
+ G.depth=depth();let pro=buildProlog();
  if(Net.on&&Net.host){Net.goId++;netSend(true);}
  playStory(pro,()=>{if(Net.on&&!Net.host){Net.ready=true;waitHost();}else startChapter(1);},false);
 }
@@ -1498,7 +1495,7 @@ function startChapter(n){
  saveCheckpoint();
 }
 function advanceChapter(n){
- mission('floor');G.ch=n;if(soloFloors()){setupHunters(n);setupGuards(n);spawnPickups(n);setupSpikes(n);}
+ mission('floor');if(n===3)beat('c3','B3F。研究区画。ここで、41人のうち何人が、「いなくなった」のかしら。',MN,9);if(n===4)beat('c4','最下層……。聞こえる？ ずっと下から、誰かが、歌ってる。',MN,8);G.ch=n;if(soloFloors()){setupHunters(n);setupGuards(n);spawnPickups(n);setupSpikes(n);}
  if(n===2){
   chapterCard(2);netEv('card',2);G.spotted=false;schedule(1,()=>radio(WIDE?RADIO.w2:RADIO[2]));
   G.breakoutFn=(Net.vs||!Net.on)?null:echoBreakout;if(0)schedule(8,()=>{
@@ -1525,6 +1522,7 @@ function advanceChapter(n){
 }
 function onNewDoc(d){
  if(Net.on&&!Net.host)return;
+ {const k=G.docsRun.size;const B={2:'ミナト：『その日記……所々、塗りつぶされてる。誰かが後から消したのね』',4:'ミナト：『名簿の数と、艦内の寝台の数が合わない。1人分、多い』',6:'ミナト：『ロッド所長……息子の名前が、研究計画書の表紙にある』',8:'ミナト：『あと1つ。――ねえ、聞こえてる？ 艦内放送が、私の声を真似し始めた』'};if(B[k])beat('doc'+k,B[k].split('：『')[1].replace(/』$/,''),MN,2.6);}
  const q=G.pending;
  if(d.id==='phone')q.push(()=>schedule(0.6,()=>radio('……そのスマホの内容は、報告しなくていい。')));
  else if(G.docsRun.size===1)q.push(()=>schedule(0.6,()=>radio('記録は全て回収しろ。どんな些細なものでもだ。')));
@@ -1568,19 +1566,34 @@ function showReport(){
 function answerReport(i){
  $('report').hidden=true;S.click();
  const n=G.docsRun.size;let slides,ending='normal';
- if(i===2&&n>=7){ending='true';slides=[
+ const logsN=(SAVE.logs||[]).length,esc=SAVE.escapes||0;
+ if(i===2&&n>=7&&esc>=3&&logsN>=12){ending='deep';slides=[
+  ['帰還','潜航を始めたミニサブマリンの窓に、赤い光が映った。'],
+  ['','ECHO-01が、格納庫の縁に立っていた。\n\nそれは――追ってこなかった。','omega'],
+  ['ミナト','『聞こえる？ 報告書は、書き換えたわ。\n「破壊に成功」ではなく、「保護」と』'],
+  ['','六本の手のひとつが、ゆっくりと窓の方へ伸びて……\n止まった。\n\n窓ガラス越しに、小さな手のひらの跡が、残った。','omega'],
+  ['LOG 24','おとうさんが、いなくなった。\nみんなも、いなくなった。\nだから、さがしてる。\n\nあなたは、いなくならない？'],
+  ['','あなたは、答えなかった。\nただ、ミニサブマリンのライトを、一度だけ点滅させた。'],
+  ['','赤い眼が細くなり、そして――ゆっくりと、青に変わった。'],
+  ['数か月後','R.O.D.-7は、公式には「沈没」と記録された。\nだが、深海の観測所は、毎晩、同じ信号を受信している。\n\n――短く、短く、長く。\nあなたの足音の、リズムで。'],
+  ['FINAL END','「エコー」','photo']];}
+ else if(i===2&&n>=7){ending='true';slides=[
   ['帰還','潜航を始めたミニサブマリンの窓に、赤い光が映った。'],
   ['','ECHO-01が、格納庫の縁に立っていた。\n\nそれは――追ってこなかった。'],
   ['','六本の手のひとつが、ゆっくりと窓の方へ伸びて……\n止まった。','omega'],
+  ['ミナト','『……あれは、あなたを見送っているの？\n本部には、「破壊した」と報告しておく』'],
   ['','赤い眼が細くなり、そして、消えた。'],
+  ['エピローグ','数日後、あなたの端末に、一件だけ未知の通信が届いた。\n\n差出人は、不明。本文は、一語だけ。\n\n「ありがとう」'],
   ['TRUE END','「エコー」','photo']];}
  else if(i===2){slides=[
   ['報告','推理は正しかった。\nだが、それを裏付ける資料が足りない。'],
   ['','本部はあなたの報告を「推測」として処理した。\nECHO-01の記録は、封印された。'],
+  ['ミナト','『……ごめんなさい。私の権限では、揉み消せなかった』'],
   ['NORMAL END','資料をすべて集めれば、別の結末があるかもしれない。']];}
  else{slides=[
   ['報告','報告書は受理された。\nECHO-01は「回収不能の暴走兵器」として記録された。'],
   ['','潜航する直前。\n背後で、何かが水面を叩く音がした。'],
+  ['ミナト','『……今の音、聞こえた？ ――いいえ、何でもない』'],
   ['NORMAL END','本当に、それだけだったのだろうか。','omega']];}
  if(G.echoDefeated)slides.unshift(['撃破','一度は止めたはずのECHO-01。その赤い眼は、暗い海の底へゆっくりと沈んでいった。','omega']);
  playStory(slides,()=>{S.victory();finish(true,ending);},true);
@@ -2189,6 +2202,7 @@ function hostApplyAct(a){
    for(const c of G.crawl||[])if(Math.hypot(c.x-x,c.y-y)<7&&los(x,y,c.x,c.y))c.stun=5;stunHunters(x,y,7,5,true);
    for(const g of G.guards||[])if(g.sleep<=0&&Math.hypot(g.x-x,g.y-y)<8.5&&los(x,y,g.x,g.y)){g.sleep=g.type==='drone'?6:5;g.sus=0;}
    for(const c of G.cams||[])if(Math.hypot(c.x+0.5-x,c.y+0.5-y)<9)c.off=12;break;}
+  case 'cqc':{const g=(G.guards||[]).find(q=>q.id===x);if(g&&g.sleep<=0&&g.state!=='dead')cqc(g,true);break;}
   case 'short':{const isH=x==='h';const o=isH?(G.hunters||[]).find(q=>q.id===y):(G.guards||[]).find(q=>q.id===y);if(o&&o.sleep<=0)applyShort(o,isH,true);break;}
   case 'shf':{const al=(SH.allies||[]).find(a=>P2&&a.id===P2.id);if(SH.coop&&G.state==='shoot'&&al&&al.down<=0)shFlashAlly(al);break;}
   case 'rev':{if(P.downed){P.downed=false;P.inv=2.5;toast('仲間に助け起こされた');}break;}
@@ -2343,7 +2357,7 @@ const BADGES=[
  ['first','はじめての潜入','ゲームを始めた','🔦'],['escape','脱出成功','はじめて脱出した','🚤'],
  ['locker','息を殺して','ロッカーでECHO-01をやり過ごした','🚪'],['vent','抜け道','追われながら通気口へ逃げこんだ','🕳️'],
  ['shutter','足止め','シャッターでECHO-01をあきらめさせた','🛡️'],['shot','反撃','ショットガンでECHO-01をひるませた','💥'],
- ['revive','治療','気絶した仲間を治療して起こした','🤝'],['short','ショート職人','ロボットを背後から3体ショートさせた','⚡'],['alldocs','調査完了','1回の潜入で資料を9つ全部集めた','📁'],
+ ['revive','治療','気絶した仲間を治療して起こした','🤝'],['short','ショート職人','ロボットを背後から3体ショートさせた','⚡'],['deep','深淵の先','FINAL END を見た','🌌'],['alldocs','調査完了','1回の潜入で資料を9つ全部集めた','📁'],
  ['true','真実','TRUE END を見た','👁️'],['depth3','深淵','潜航深度3に到達した','🌊'],
  ['fast','速攻','8分以内に脱出した','⏱️'],['boss','撃破','ECHO-01を倒した','x'],['nocatch','無傷','一度も捕まらずに脱出した','✨'],
 ];
@@ -2372,7 +2386,7 @@ function renderBadges(box){
 }
 function teaser(win,ending){
  const n=G.docsRun?G.docsRun.size:0,got=(SAVE.badges||[]).length;const t=[];
- if(!(SAVE.endings||[]).includes('true'))t.push(n<7?`真エンディングには資料があと ${7-n} つ足りない`:'資料は足りている。あとは、正しい答えを見つけるだけ');
+ if(!(SAVE.endings||[]).includes('true'))t.push(n<7?`真エンディングには資料があと ${7-n} つ足りない`:'資料は足りている。あとは、正しい答えを見つけるだけ');else if(!(SAVE.endings||[]).includes('deep'))t.push(`FINAL END：潜航深度3以上・音声ログ12本以上・資料7つ以上（ログ ${(SAVE.logs||[]).length}/24）`);
  const d=Math.min(3,SAVE.escapes||0);if(d<3)t.push(`次の潜航深度 ${d+1}：${DEPTH_TXT[d+1]}`);
  t.push(`バッジ ${got} / ${BADGES.length}　まだ見つけていないバッジがある`);t.push('ロビーの「強化」で装備をパワーアップできる');
  return t.join('\n');
@@ -2876,7 +2890,7 @@ function guardSees(g){
  let k=(1.9-d/rng)*(P.sprint?1.6:1)*(P.moving?1:0.7)*(eqS()==='suit_sneak'?0.7:1)*(LX().st||1)*[0.7,1,1.3][DIFK()];if(P.box){k*=P.moving?0.35:0;}return k;
 }
 function setPhase(p){if(G.phase===p)return;const prev=G.phase;G.phase=p;
- if(p==='alert'){G.alertN=(G.alertN||0)+1;G.phaseT=0;for(const g of G.guards||[])g.fireT=Math.max(g.fireT,1.2);S.stinger();vib([120,60,120],'alert',1500);toast('見つかった！　警報発令');
+ if(p==='alert'){G.alertN=(G.alertN||0)+1;beat('alert1','見つかったのね！？ 立ち止まらないで。ロッカーでも通気口でもいい、視界から消えて！',MN,0.8);G.phaseT=0;for(const g of G.guards||[])g.fireT=Math.max(g.fireT,1.2);S.stinger();vib([120,60,120],'alert',1500);toast('見つかった！　警報発令');
   if(prev==='normal'||prev==='caution'){if(G.chaff<=0)callReinforce();if(E&&!E.dormant){E.last=[P.x,P.y];if(E.state!=='chase'){setEchoState('search');E.searchT=6;}}}}
  else if(p==='evasion'){G.phaseT=18;}else if(p==='caution'){G.phaseT=28;toast('警戒態勢が続いている');}else{G.phaseT=0;toast('警戒が解除された');}
 }
@@ -2971,6 +2985,38 @@ const CONTRACTS=[
 function buildContracts(){const box=$('ctBox');if(!box)return;const sel=SAVE.contracts||[];box.innerHTML='<span>契約</span>'+CONTRACTS.map(c=>'<button class="rchip'+(sel.includes(c.id)?' sel':'')+'" data-cid="'+c.id+'" title="'+c.desc+'">'+c.name+'<small>+'+c.cr+'CR</small></button>').join('')+'<em id="ctDesc">'+(sel.length?sel.map(id=>{const c=CONTRACTS.find(q=>q.id===id);return c?c.name+'：'+c.desc:'';}).join('　/　'):'契約を選ぶと、達成でCREDITとXPのボーナス（最大2つ）')+'</em>';
  box.querySelectorAll('[data-cid]').forEach(b=>b.onclick=()=>{let a=SAVE.contracts||[];const id=b.dataset.cid;if(a.includes(id))a=a.filter(x=>x!==id);else{if(a.length>=2){S.deny();toast('契約は2つまで');return;}a=a.concat(id);}SAVE.contracts=a;save();S.click();buildContracts();});}
 // ===== story: voice logs =====
+// ===== story: speaker beats (once per run) =====
+const MN='ミナト（本部）';
+function beat(id,text,who,delay){G.beats=G.beats||{};if(G.beats[id])return;G.beats[id]=1;if(Net.on&&!Net.host)return;schedule(delay==null?1.2:delay,()=>radio(text,who||MN));}
+const LONG_PROLOGUE=[
+ ['11月8日　23:07','極秘機械兵器を輸送していた潜水艦《R.O.D.-7》との通信が、途絶えた。','omega_sheet'],
+ ['R.O.D.-7','全長312メートル。乗組員41名。\n運用は、民間軍事企業「ロッド重工」。\n\n積荷の名前は、乗組員の大半にも知らされていなかった。'],
+ ['ECHO-01','六本の腕。十七節の尾。単眼の光学センサー。\n\n開発コードは「エコー」。\n音を学習し、音で狩る、自律型の兵器。'],
+ ['最後の受信記録','最後に届いたのは、ノイズ混じりの音声が一件だけ。\n\n「逃げて、あいつが――」','voice'],
+ ['本部','あなたは本部から派遣された特殊調査隊員。\n担当オペレーターは、ミナト。\n\n『生存者の確認が最優先。……無理はしないで』'],
+ ['任務','艦内の調査。研究データの回収。\nそして、可能であれば、積荷の確保。\n\n本部は、それ以上のことを、まだ話していない。'],
+ ['潜入','あなたを降ろした黒いミニサブマリンは、闇の中へ戻っていった。\n\n『データを確認したら、迎えを出す』'],
+ ['','艦内は、静かだった。\n\n静かすぎて、自分の心臓の音が、聞こえる。']];
+const ACTS=[null,
+ [['第二幕　居ない者たち','前回の調査で、ECHO-01は回収できなかった。\n本部は、再びあなたを送り込んだ。'],
+  ['ミナト','『艦内で確認できた遺体は、ゼロ。\n乗組員41名は、全員、「居ない」』'],
+  ['','遺体がないのは、安全だということではない。\n\n――どこかに、集められている。']],
+ [['第三幕　ロア','潜るたびに、艦内の音が近くなっている。\nあなたは、ある名前を何度も目にした。'],
+  ['ロア','ロッド所長の息子。実験対象。\n脳の構造が、ECHO-01の制御システムに使われている。'],
+  ['ミナト','『……本部は、知っていたの。最初から。\n積荷が「兵器」ではなく、「子ども」だということを』'],
+  ['','あれは暴走したのではない。\n\nずっと、誰かを探している。']],
+ [['第四幕　通信','本部との通信に、知らない声が混ざるようになった。\nそれでも、あなたは潜る。'],
+  ['？？？','『……おとうさん？』\n\n通信のノイズの奥で、子どもの声が、ミナトの声に重なった。'],
+  ['ミナト','『聞こえた？ ごめんなさい、ずっと黙っていた。\n私への命令は、回収じゃない。――破壊よ』'],
+  ['','あなたは、誰の命令で潜っている？\n\n答えは、艦の最下層にある。']],
+ [['終幕　数える者','これが最後の潜航になる。\n艦はもう、あなたの足音を、全部覚えている。'],
+  ['ミナト','『脱出艇は1基。ECHO-01は、乗る人数を数えている。\n……お願い。間違えないで』'],
+  ['','歩き方。息づかい。隠れる場所。\n\n次に会うとき、あれはあなたの癖で、あなたを探す。']]];
+function buildProlog(){const esc=SAVE.escapes||0;const first=!SAVE.dived;SAVE.dived=true;save();
+ let pro=first?LONG_PROLOGUE.slice():PROLOGUE.slice();
+ const act=Math.min(4,esc);if(act>=1&&(SAVE.actSeen||0)<act&&ACTS[act]){pro=ACTS[act].concat(pro.slice(-2));SAVE.actSeen=act;save();}
+ else if(esc>=2&&!first)pro.splice(pro.length-1,0,['潜航深度 '+esc,'潜るたびに、艦内の音が近くなっている気がする。\n……あれは、あなたを覚えているのかもしれない。']);
+ return pro;}
 const LOGS=[
  {id:'l1',title:'LOG 01　通信士の最後の報告',text:'……こちら通信室。艦長、聞こえますか。\nB3Fの隔壁が、内側から叩かれています。\n叩く間隔が、人間のそれより――揃いすぎている。\n\n（以降、ノイズ）'},
  {id:'l2',title:'LOG 02　整備士の独り言',text:'冷却水の配管に、爪の跡があった。\n6本。いや、数え直すたびに本数が増える。\n俺の数え方が悪いんだと思いたい。'},
@@ -2983,6 +3029,18 @@ const LOGS=[
  {id:'l9',title:'LOG 09　研究員Kのメモ',text:'ECHO-01は「音」を覚える。\n人の足音、扉の音、そして――悲鳴。\n覚えた音は、後で、別の場所から返ってくる。'},
  {id:'l10',title:'LOG 10　ロアの声',text:'……おとうさん。\nくらい。さむい。\nみんな、いっしょに、いてくれるって、いった。\nだから、ぼく、みんなを、さがしてる。'},
  {id:'l11',title:'LOG 11　最終隔壁',text:'この音声を聞いている者へ。\n脱出艇は1基しかない。\n――あれは、乗組員の数を、数えている。\n乗せる人数を間違えるな。'},
+ {id:'l13',title:'LOG 13　乗組員名簿',text:'41名のうち、名簿に写真がないのが1人。\n名前の欄には「ロア」とだけある。\n\n乗組員ではなく、「積荷」の欄に印が入っている。'},
+ {id:'l14',title:'LOG 14　艦長の決断',text:'本部は、積荷を「破棄」しろと言った。\n私は拒否した。\n\nあの子が、私の名前を覚えていたからだ。'},
+ {id:'l15',title:'LOG 15　ロッドの懺悔',text:'妻を亡くしたのは、私の研究のせいだった。\nだから私は、もう一度だけ、あの子の声を聞きたかった。\n\n――兵器にするつもりなど、なかった。'},
+ {id:'l16',title:'LOG 16　厨房の音',text:'真夜中、冷蔵庫の中から、誰かが数を数える声がする。\nいち、に、さん、し……\n41まで数えて、また1に戻る。'},
+ {id:'l17',title:'LOG 17　ミナトの通信記録',text:'（本部・内部記録）\n担当オペレーター、ミナト。\n命令：対象の「確保」を装い、現場で破壊すること。\n備考：本人には、最終段階まで知らせるな。'},
+ {id:'l18',title:'LOG 18　医務官の手記',text:'ロアは痛みを感じない。\nだが、「いなくなる」ことを、ひどく怖がる。\n\n眠る前に、必ず私に聞く。「あした、みんな、いる？」'},
+ {id:'l19',title:'LOG 19　機関室の落書き',text:'壁に、爪で、びっしりと同じ文字が刻まれている。\n\n「ひとりに しないで」'},
+ {id:'l20',title:'LOG 20　通信士の録音',text:'私の声が、勝手に艦内放送で流れている。\n私は何も言っていない。\n\n……ああ、そうか。あの子が、真似しているんだ。'},
+ {id:'l21',title:'LOG 21　最後の乗組員',text:'隔壁の内側から、誰かが叩いている。\n開けてはいけない、と艦長は言った。\n\n叩く音は、いつしか、私の名前を呼ぶ声に変わった。'},
+ {id:'l22',title:'LOG 22　脱出艇の設計者',text:'ミニサブマリンは、1基。定員は、1名。\n設計者として、ここに残す。\n\n乗れなかった者を、あの子が、迎えに来る。'},
+ {id:'l23',title:'LOG 23　本部への報告書',text:'積荷の破壊に成功した、と報告する。\n……嘘だ。\n\nあの子は、まだ艦の底で、誰かが来るのを、待っている。'},
+ {id:'l24',title:'LOG 24　エコー',text:'おとうさんが、いなくなった。\nみんなも、いなくなった。\nだから、さがしてる。\n\nあなたは、いなくならない？'},
  {id:'l12',title:'LOG 12　あなたへ',text:'潜るたびに、艦は少しずつ「あなた」を覚える。\n歩き方。息づかい。隠れる場所。\n\n次に会うとき、あれは、あなたの癖で、あなたを探す。'}];
 function unlockLogByLevel(){SAVE.logs=SAVE.logs||[];if(opLv()%2!==0)return;const nx=LOGS.find(l=>!SAVE.logs.includes(l.id));if(nx){SAVE.logs.push(nx.id);setTimeout(()=>toast('音声ログが解析された：'+nx.title),1200);}}
 function spawnLogs(){G.logs=[];SAVE.logs=SAVE.logs||[];if(Net.vs)return;const rest=LOGS.filter(l=>!SAVE.logs.includes(l.id));if(!rest.length)return;
@@ -3042,7 +3100,7 @@ function applyShort(o,isH,noCredit){
 function doShort(it){const o=it.h||it.g;if(!o)return;
  if(Net.on&&!Net.host){netAct('short',it.h?'h':'g',o.id);shortFx(o);const gain=(o.boss?60:15)*(MOD.bonus||1);mission('short');SAVE.credits+=gain;save();G.shorts=(G.shorts||0)+1;toast(`ショート成功 +${gain} CREDIT`);if(G.shorts>=3)badge('short');return;}
  applyShort(o,!!it.h);}
-function cqc(g){mission('cqc');g.sleep=60;g.sus=0;g.state='patrol';S.pound(0.6,0);vib([50,30,80]);sparks(g.x,g.y,6,3);G.cqcN=(G.cqcN||0)+1;const gain=8*(MOD.bonus||1);SAVE.credits+=gain;save();toast(`背後から気絶させた +${gain} CREDIT`);}
+function cqc(g,fromGuest){if(!fromGuest){mission('cqc');G.cqcN=(G.cqcN||0)+1;}if(Net.on&&!Net.host&&!fromGuest&&g.id)netAct('cqc',g.id);g.sleep=60;g.sus=0;g.state='patrol';S.pound(0.6,0);vib([50,30,80]);sparks(g.x,g.y,6,3);if(fromGuest)return;const gain=8*(MOD.bonus||1);SAVE.credits+=gain;save();toast(`背後から気絶させた +${gain} CREDIT`);}
 function fireDart(){const a=P.face,rf=eqW()==='w_rifle';G.darts.push({x:P.x+Math.cos(a)*0.4,y:P.y+Math.sin(a)*0.4,vx:Math.cos(a)*(rf?22:14),vy:Math.sin(a)*(rf?22:14),t:rf?1.1:0.9});S.click(1);vib(20);}
 function useItem2(k){
  if(k==='dart'){fireDart();return true;}
