@@ -321,7 +321,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.92（新フロア追加）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.93（新フロア追加）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -1181,6 +1181,7 @@ function nearestInteract(){
  if(G.coreT>0&&E&&Math.hypot(E.x-P.x,E.y-P.y)<2.2)return {type:'finish',label:'コアを破壊する'};
  for(const [i,p] of (G.pylons||[]).entries())if(!G.bossDown&&p.cd<=0&&p.ch<=0&&Math.hypot(p.x+0.5-P.x,p.y+0.5-P.y)<1.4)return {type:'pylon',i,label:'電磁パイロンを起動'};
  {const cq=nearGuardCQC();if(cq)return {type:'cqc',g:cq.g,label:'背後から気絶させる'};}
+ {const rs=nearRobotShort();if(rs)return {type:'short',h:rs.h,g:rs.g,label:'背後からショートさせる'};}
  for(const c of G.cams||[]){if(c.dead)continue;const cy=c.y+0.5+(c.dir>0?0.45:-0.45);if(Math.hypot(c.x+0.5-P.x,cy-P.y)<1.3)return {type:'camkill',c,label:'カメラを壊す'};}
  if(Net.on)for(const q of PARTNERS){if(q&&q.here&&(Net.host?q.down:q.downed)&&Math.hypot(q.x-P.x,q.y-P.y)<1.5)return {type:'revive',label:'仲間を治療する',q};}
  let best=null,bd=9;const cand=(o,d,pr)=>{const s=d-pr*0.3;if(d<1.25&&s<bd){bd=s;best=o;}};
@@ -1210,6 +1211,7 @@ function doAction(){
   case 'loot':lootShelf(it.f);break;
   case 'rebuild':rebuildWall(it.d);break;
   case 'cqc':cqc(it.g);break;
+  case 'short':doShort(it);break;
   case 'camkill':killCam(it.c);break;
   case 'pylon':pylonUse(it.i);break;
   case 'finish':bossFinish();break;
@@ -1563,7 +1565,7 @@ function update(dt){
  for(const g of gates)g.anim=lerp(g.anim,g.open?1:0,Math.min(1,dt*2.5));
  if(G.state==='play'){
   G.runT+=dt;
-  if(G.freezeT>0){G.freezeT-=dt;}else if(Net.on&&!Net.host)guestUpdate(dt);else{updatePlayer(dt);updateEcho(dt);updateExtras(dt);updateGuards(dt);updateHunters(dt);updateSpikes(dt);exitTick();healTick(dt);shadowTick(dt);if(!(Net.on&&Net.vs&&!Net.host))tipsTick(dt);updateBoss(dt);updateOutage(dt);updateGimmicks(dt);if(Net.on&&P.downed&&!PARTNERS.some(q=>q&&q.here&&!q.down))caught();}
+  if(G.freezeT>0){G.freezeT-=dt;}else if(Net.on&&!Net.host)guestUpdate(dt);else{updatePlayer(dt);updateEcho(dt);updateExtras(dt);updateGuards(dt);updateHunters(dt);updateSpikes(dt);exitTick();healTick(dt);chapterGuard(dt);shadowTick(dt);if(!(Net.on&&Net.vs&&!Net.host))tipsTick(dt);updateBoss(dt);updateOutage(dt);updateGimmicks(dt);if(Net.on&&P.downed&&!PARTNERS.some(q=>q&&q.here&&!q.down))caught();}
   partnerTick(dt);
   if(P.locker&&G.lockChase&&E&&E.state!=='chase'&&!E.rip){G.lockChase=false;badge('locker');}
   const chasing=E.state==='chase'||!!E.lunge;{const want=(G.hunters||[]).some(h=>h.st==='chase'&&h.stun<=0)||chasing||G.unlocked&&E.state==='search'||G.phase==='alert'||G.phase==='evasion';if(want)G.chaseHold=2.5;else G.chaseHold=Math.max(0,(G.chaseHold||0)-dt);Snd.setChase(G.chaseHold>0);}
@@ -2140,6 +2142,7 @@ function hostApplyAct(a){
    for(const c of G.crawl||[])if(Math.hypot(c.x-x,c.y-y)<7&&los(x,y,c.x,c.y))c.stun=5;stunHunters(x,y,7,5,true);
    for(const g of G.guards||[])if(g.sleep<=0&&Math.hypot(g.x-x,g.y-y)<8.5&&los(x,y,g.x,g.y)){g.sleep=g.type==='drone'?6:5;g.sus=0;}
    for(const c of G.cams||[])if(Math.hypot(c.x+0.5-x,c.y+0.5-y)<9)c.off=12;break;}
+  case 'short':{const isH=x==='h';const o=isH?(G.hunters||[]).find(q=>q.id===y):(G.guards||[]).find(q=>q.id===y);if(o&&o.sleep<=0)applyShort(o,isH,true);break;}
   case 'rev':{if(P.downed){P.downed=false;P.inv=2.5;toast('仲間に助け起こされた');}break;}
   case 'revg':{const t=PARTNERS.find(q=>q&&q.id===x);if(t&&t.down){t.down=false;t.heal=0;t.inv=3;t.hp=3;toast('仲間が治療した');}break;}
   case 'board':{if(G.state==='play'&&G.unlocked)startEscape();break;}
@@ -2234,6 +2237,15 @@ function healTick(dt){
   if(rate>0&&Math.random()<dt*2.5)sparks(x.x,x.y-0.2,1,1.6);
   if(x.o.heal>=1){x.o.heal=0;if(x.host){P.downed=false;P.inv=2.5;toast('仲間の治療で目を覚ました！');}else{x.o.down=false;x.o.hp=3;x.o.inv=3;toast('仲間が目を覚ました！');}S.shutter(false,0.3,0);vib([40,40,80],'heal',400);}}
 }
+function chapterGuard(dt){
+ if(!(!Net.on||(Net.host&&!Net.vs)))return;if(G.state!=='play'||G.exit||G.cgPend)return;
+ G.cgT=(G.cgT||0)-dt;if(G.cgT>0)return;G.cgT=0.7;
+ const go=n=>{G.cgPend=true;schedule(0.8,()=>{G.cgPend=false;if(!G.exit)soloFloors()?setExit(n):advanceChapter(n);});};
+ const bp=docs.find(q=>q.id==='bp2');
+ if(G.ch===1&&chDocs()>=(Net.on?4:3))go(2);
+ else if(G.ch===2&&(G.breakers||[]).length&&G.breakers.every(b=>b.on))go(3);
+ else if(G.ch===3&&bp&&bp.got)go(4);
+}
 function partnerTick(dt){
  for(const q of PARTNERS){if(!q||!q.here)continue;const k=Math.min(1,dt*14);const ox=q.x,oy=q.y;q.x+=(q.tx-q.x)*k;q.y+=(q.ty-q.y)*k;
   q.spd=Math.hypot(q.x-ox,q.y-oy)/Math.max(dt,1e-3);q.ph+=dt*Math.min(q.spd,5)*2.6;q.inv=Math.max(0,(q.inv||0)-dt);}
@@ -2282,7 +2294,7 @@ const BADGES=[
  ['first','はじめての潜入','ゲームを始めた','🔦'],['escape','脱出成功','はじめて脱出した','🚤'],
  ['locker','息を殺して','ロッカーでECHO-01をやり過ごした','🚪'],['vent','抜け道','追われながら通気口へ逃げこんだ','🕳️'],
  ['shutter','足止め','シャッターでECHO-01をあきらめさせた','🛡️'],['shot','反撃','ショットガンでECHO-01をひるませた','💥'],
- ['revive','治療','気絶した仲間を治療して起こした','🤝'],['alldocs','調査完了','1回の潜入で資料を9つ全部集めた','📁'],
+ ['revive','治療','気絶した仲間を治療して起こした','🤝'],['short','ショート職人','ロボットを背後から3体ショートさせた','⚡'],['alldocs','調査完了','1回の潜入で資料を9つ全部集めた','📁'],
  ['true','真実','TRUE END を見た','👁️'],['depth3','深淵','潜航深度3に到達した','🌊'],
  ['fast','速攻','8分以内に脱出した','⏱️'],['boss','撃破','ECHO-01を倒した','x'],['nocatch','無傷','一度も捕まらずに脱出した','✨'],
 ];
@@ -2715,7 +2727,7 @@ function updateGuards(dt){
  for(const g of G.guards){const _sp=P;const _q=coopTarget(g);if(_q!==P)REALP=_sp;P=_q;try{(()=>{
   if(g.state==='dead')return;g.ph+=dt;const T_=GT[g.type];
   if(E&&!E.dormant&&E.stunT<=0&&Math.hypot(E.x-g.x,E.y-g.y)<1.1){g.state='dead';sparks(g.x,g.y,14,5);const [v,p]=spat(g.x,g.y);S.crash(Math.max(0.2,v*0.8),p);if(v>0.15)toast('警備兵がECHO-01に襲われた……');return;}
-  if(g.sleep>0){g.sleep-=dt;if(g.sleep<=0){g.state='search';g.sus=0.5;g.look=4;}return;}
+  if(g.sleep>0){g.sleep-=dt;if(g.shorted){if(Math.random()<dt*7)sparks(g.x,g.y,2,2.5);if(g.sleep<=0)g.shorted=false;}if(g.sleep<=0){g.state='search';g.sus=0.5;g.look=4;}return;}
   // visual discovery for minimap
   if(!g.seen&&Math.hypot(g.x-P.x,g.y-P.y)<8.5&&los(P.x,P.y,g.x,g.y))g.seen=true;
   const k=guardSees(g);
@@ -2763,6 +2775,25 @@ function hurtPlayer(n){if(P&&P.isP2){partnerHurt(n,P.src);return;}if(G.dev&&G.de
  if(P.hp<=0){if(P.bandage>0){P.bandage--;if(G.kits>0)G.kits--;P.hp=2;toast('救急キットで持ち直した');return;}G.capturedBy='guard';caught();}}
 function nearGuardCQC(){if(!G.guards)return null;for(const g of G.guards){const rod=eqW()==='w_rod';if(g.sleep>0||g.state==='alert'||(!GT[g.type].cqc&&!rod))continue;const d=Math.hypot(g.x-P.x,g.y-P.y);if(d<1.15){const behind=Math.abs(angDiff(g.a,Math.atan2(P.y-g.y,P.x-g.x)))>1.9;if(behind||g.state==='sus'||rod)return {g,d};}}return null;}
 function killCam(c){c.dead=true;const cy=c.y+0.5+(c.dir>0?0.45:-0.45);sparks(c.x+0.5,cy,16,5);S.crash(0.35,0);vib([40,30,60]);toast('監視カメラを壊した');}
+function nearRobotShort(){
+ const ok=(o)=>Math.hypot(o.x-P.x,o.y-P.y)<1.3&&Math.abs(angDiff(o.a,Math.atan2(P.y-o.y,P.x-o.x)))>1.9;
+ for(const h of G.hunters||[]){if(h.dead||h.sleep>0||h.stun>0)continue;if(ok(h))return {h};}
+ for(const g of G.guards||[]){if(g.type!=='drone'||g.sleep>0||g.state==='dead')continue;if(ok(g))return {g};}
+ return null;}
+function shortFx(o){S.pound(0.6,0);vib([50,30,80]);sparks(o.x,o.y,16,5);}
+function applyShort(o,isH,noCredit){
+ const boss=!!o.boss;o.sleep=isH?(boss?8:20):25;o.shorted=true;o.sus=0;if(!isH)o.state='patrol';
+ shortFx(o);G.shorts=(G.shorts||0)+1;
+ for(const c of G.cams||[])if(Math.hypot(c.x+0.5-o.x,c.y+0.5-o.y)<6)c.off=10;
+ let chain=0;
+ for(const h of G.hunters||[])if(h!==o&&h.sleep<=0&&!h.boss&&Math.hypot(h.x-o.x,h.y-o.y)<3.5){h.sleep=3;h.shorted=true;chain++;}
+ for(const g of G.guards||[])if(g!==o&&g.type==='drone'&&g.sleep<=0&&Math.hypot(g.x-o.x,g.y-o.y)<3.5){g.sleep=4;g.shorted=true;chain++;}
+ const gain=boss?60:15;
+ if(!noCredit){SAVE.credits+=gain;save();toast(chain?`ショート連鎖！ ${chain+1}体停止 +${gain} CREDIT`:`ショート成功 +${gain} CREDIT`);if((G.shorts||0)>=3)badge('short');}
+}
+function doShort(it){const o=it.h||it.g;if(!o)return;
+ if(Net.on&&!Net.host){netAct('short',it.h?'h':'g',o.id);shortFx(o);const gain=o.boss?60:15;SAVE.credits+=gain;save();G.shorts=(G.shorts||0)+1;toast(`ショート成功 +${gain} CREDIT`);if(G.shorts>=3)badge('short');return;}
+ applyShort(o,!!it.h);}
 function cqc(g){g.sleep=60;g.sus=0;g.state='patrol';S.pound(0.6,0);vib([50,30,80]);sparks(g.x,g.y,6,3);toast('背後から気絶させた');}
 function fireDart(){const a=P.face,rf=eqW()==='w_rifle';G.darts.push({x:P.x+Math.cos(a)*0.4,y:P.y+Math.sin(a)*0.4,vx:Math.cos(a)*(rf?22:14),vy:Math.sin(a)*(rf?22:14),t:rf?1.1:0.9});S.click(1);vib(20);}
 function useItem2(k){
@@ -3065,6 +3096,7 @@ function tipsTick(dt){
  for(const g of G.guards||[])if(near(g.x,g.y,8)){tip('guard','警備兵の光（視野）に入ると見つかる。背後から近づけば気絶させられる');break;}
  for(const c of G.cams||[])if(!c.dead&&near(c.x+0.5,c.y+0.5,7)){tip('cam','カメラの真下は死角。近づけば壊せる。麻酔銃でも壊せる');break;}
  for(const it of G.pickups||[])if(near(it.x+0.5,it.y+0.5,3.5)){tip('pick','アイテムは拾ったら右下の青いボタンで使う。⇄で種類を切り替え');break;}
+ for(const h of G.hunters||[])if(near(h.x,h.y,6)){tip('short','ロボットは背後から近づけば「ショート」させて止められる（調べるボタン）。近くのロボも巻き込める');break;}
  if(E&&!E.dormant&&E.state==='chase')tip('chase','追われている！ 走って逃げろ。通気口に入るか、シャッターを閉めろ');
  if(E&&!E.dormant)for(const L of LOCKERS)if(near(L.x+0.5,L.y+0.5,3)){tip('locker','ロッカーに隠れればECHO-01をやり過ごせる。見られていると引きずり出される');break;}
  if(G.looted&&typeof nearLoot==='function'){for(const f of FURN){if(!LOOT_T.includes(f.t))continue;if(near(f.x+f.w/2,f.y+f.h/2,3.5)){tip('shelf','金色に光る棚は調べられる。アイテムが入っていることがある');break;}}}
@@ -3108,7 +3140,7 @@ function huntSees(h){if(!playerVisible())return false;const T_=HT[h.type];const 
 function updateHunters(dt){
  if(!G.hunters||!G.hunters.length)return;const dk=[0.85,1,1.12][DIFK()]*(1+(G.depth||0)*0.05);
  for(const h of G.hunters){const _sp=P;const _q=coopTarget(h);if(_q!==P)REALP=_sp;P=_q;try{(()=>{const T_=HT[h.type];h.ph+=dt;h.cd=Math.max(0,h.cd-dt);
-  if(h.sleep>0){h.sleep-=dt;return;}if(h.stun>0){h.stun-=dt;return;}if(h.warn>0){h.warn-=dt;return;}
+  if(h.sleep>0){h.sleep-=dt;if(h.shorted){if(Math.random()<dt*7)sparks(h.x,h.y,2,2.5);if(h.sleep<=0)h.shorted=false;}return;}if(h.stun>0){h.stun-=dt;return;}if(h.warn>0){h.warn-=dt;return;}
   const d=Math.hypot(P.x-h.x,P.y-h.y);const sees=huntSees(h);
   if(sees){h.last=[P.x,P.y];h.lostT=0;if(h.st!=='chase'){h.st='chase';h.path=null;h.warn=0.8;const [v,p]=spat(h.x,h.y,18);if(h.type==='bat'){S.screech();}else{S.pound(Math.max(0.3,v),p);setTimeout(()=>S.pound(Math.max(0.3,v),p),160);}G.redPulse=Math.max(G.redPulse,0.6);vib([60,40,60],'hunt',800);
     netEv('hunt',r2(h.x),r2(h.y));if(!h.barked){h.barked=true;toast(h.boss?`${BOSSNAME[G.ch]}に見つかった！`:(h.type==='bat'?'コウモリに見つかった！':'ロボット犬に見つかった！'));tip('hunter','ロボット犬やコウモリは閃光弾・トラップ・麻酔銃でひるむ。ロッカーや通気口に逃げ込め');}
