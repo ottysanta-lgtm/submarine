@@ -321,7 +321,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
    <button class="mbtn" id="btnShop">クレジットショップ <small>SHOP</small></button>
   </div>
  </div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.87（新フロア追加）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 3.88（新フロア追加）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
@@ -372,8 +372,8 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
   <div class="coopBox"><b>開発者コード</b><div class="enter"><input id="devCode" placeholder="コードを入力" autocomplete="off" style="background:#0a0d10;border:1px solid var(--line);color:var(--ink);padding:8px 10px;font-size:16px;width:180px;-webkit-user-select:text;user-select:text"><button class="ghost" id="devGo">決定</button></div><p id="devMsg" style="margin:0;font-size:12px;color:var(--amber)"></p></div>
   <div id="devPanel" class="coopBox" style="margin-top:12px" hidden>
    <b>開発者メニュー</b>
-   <div class="rchips"><button class="rchip" id="dvGod">無敵：OFF</button><button class="rchip" id="dvCamo">迷彩無限：OFF</button><button class="rchip" id="dvItems">アイテムMAX</button><button class="rchip" id="dvUpg">強化MAX</button><button class="rchip" id="dvCred">+10000 CREDIT</button><button class="rchip" id="dvAll">全解放</button></div>
-   <small style="color:var(--dim)">潜航深度（周回）</small><div class="rchips"><button class="rchip" data-dep="0">深度0</button><button class="rchip" data-dep="1">深度1</button><button class="rchip" data-dep="2">深度2</button><button class="rchip" data-dep="3">深度3</button></div>
+   <div class="rchips"><button class="rchip" id="dvGod">無敵：OFF</button><button class="rchip" id="dvCamo">迷彩無限：OFF</button><button class="rchip" id="dvItems">アイテムMAX：OFF</button><button class="rchip" id="dvUpg">強化MAX：OFF</button><button class="rchip" id="dvCred">+10000 CREDIT：OFF</button><button class="rchip" id="dvAll">全解放：OFF</button><button class="rchip" id="dvOff" style="border-color:#ff5040;color:#ff8a70">開発者モードを終了（全部OFF）</button></div>
+   <small style="color:var(--dim)">潜航深度（周回）</small><div class="rchips"><button class="rchip" data-dep="0">深度0</button><button class="rchip" data-dep="1">深度1</button><button class="rchip" data-dep="2">深度2</button><button class="rchip" data-dep="3">深度3</button><button class="rchip" id="dvDepReset">深度：変更なし</button></div>
    <small style="color:var(--dim)">コース選択（その章から開始）</small><div class="rchips"><button class="rchip" data-ch="1">CH1 居住区</button><button class="rchip" data-ch="2">CH2 機関区画</button><button class="rchip" data-ch="3">CH3 研究区画</button><button class="rchip" data-ch="4">FINAL 格納庫</button><button class="rchip" data-ch="5">ESCAPE 脱出艇</button></div>
   </div>
  </div>
@@ -1889,10 +1889,12 @@ document.querySelectorAll('.back').forEach(b=>b.onclick=()=>{S.click();showScree
 $('resRetry').onclick=()=>{if(Net.on){if(G.lastWin)openCoop();else if(Net.host&&G.checkpoint)startChapter(G.checkpoint.ch);return;}if(!G.lastWin&&G.checkpoint){startChapter(G.checkpoint.ch);}else{buildRoles();showScreen('roles');}};
 $('btnCoop').onclick=()=>openCoop();$('btnSet').onclick=()=>openSettings();
 $('devGo').onclick=()=>{if(($('devCode').value||'').trim().toUpperCase()===DEV_CODE){SAVE.devOn=true;SAVE.devOpt=SAVE.devOpt||{};save();$('devPanel').hidden=false;$('devMsg').textContent='開発者モードが有効になった';renderDev();S.victory();}else{$('devMsg').textContent='コードが違います';S.deny();}};
-const dvT=k=>{SAVE.devOpt=SAVE.devOpt||{};SAVE.devOpt[k]=!SAVE.devOpt[k];save();renderDev();S.click();};$('dvGod').onclick=()=>dvT('god');$('dvCamo').onclick=()=>dvT('camo');$('dvItems').onclick=()=>{SAVE.devOpt=SAVE.devOpt||{};SAVE.devOpt.items=true;save();$('devMsg').textContent='次の潜入からアイテムが最大になる';};
-$('dvUpg').onclick=()=>{SAVE.upg={stam:3,speed:3,light:3,kit:3,hull:3};save();$('devMsg').textContent='強化をすべて最大にした';};$('dvCred').onclick=()=>{SAVE.credits+=10000;save();updateCredits();$('devMsg').textContent='+10000 CREDIT';};
-$('dvAll').onclick=()=>{SAVE.docs=DOCS.map(d=>d.id);SAVE.badges=BADGES.map(b=>b[0]);SAVE.endings=['true','normal'];SAVE.roles=Object.keys(ROLE_PRICE);save();updateCredits();$('devMsg').textContent='資料・バッジ・エンディングを全解放';};
-document.querySelectorAll('[data-dep]').forEach(b=>b.onclick=()=>{SAVE.escapes=+b.dataset.dep;save();updateCredits();$('devMsg').textContent='潜航深度 '+b.dataset.dep+' に設定';});
+const dvT=k=>{SAVE.devOpt=SAVE.devOpt||{};SAVE.devOpt[k]=!SAVE.devOpt[k];save();renderDev();S.click();};$('dvGod').onclick=()=>dvT('god');$('dvCamo').onclick=()=>dvT('camo');$('dvItems').onclick=()=>{const on=!(SAVE.devOpt&&SAVE.devOpt.items);devSet.items(on);save();renderDev();S.click();$('devMsg').textContent=on?'次の潜入からアイテムが最大になる':'アイテムMAXをOFFにした（次の潜入から通常）';};
+$('dvUpg').onclick=()=>{const on=!SAVE.devUpg;devSet.upg(on);save();renderDev();S.click();$('devMsg').textContent=on?'強化をすべて最大にした':'強化を元の状態に戻した';};$('dvCred').onclick=()=>{const on=!SAVE.devCred;devSet.cred(on);save();updateCredits();renderDev();S.click();$('devMsg').textContent=on?'+10000 CREDIT':'-10000 CREDIT（元に戻した）';};
+$('dvAll').onclick=()=>{const on=!SAVE.devAll;devSet.all(on);save();updateCredits();renderDev();S.click();$('devMsg').textContent=on?'資料・バッジ・エンディングを全解放':'全解放をOFFにした（資料・バッジ・エンディング・役職を元に戻した）';};
+$('dvOff').onclick=()=>{devSet.items(false);devSet.upg(false);devSet.cred(false);devSet.all(false);devSet.dep();SAVE.devOpt={};SAVE.devOn=false;save();updateCredits();devApply();$('devPanel').hidden=true;$('devMsg').textContent='開発者モードを終了した。すべてOFF（コードを入れ直すと再び使える）';S.click();};
+$('dvDepReset').onclick=()=>{devSet.dep();save();updateCredits();renderDev();S.click();$('devMsg').textContent='潜航深度を元に戻した';};
+document.querySelectorAll('[data-dep]').forEach(b=>b.onclick=()=>{if(SAVE.escapesBak==null)SAVE.escapesBak=SAVE.escapes||0;SAVE.escapes=+b.dataset.dep;save();updateCredits();renderDev();$('devMsg').textContent='潜航深度 '+b.dataset.dep+' に設定';});
 document.querySelectorAll('[data-ch]').forEach(b=>b.onclick=()=>{Snd.init();devJump(+b.dataset.ch);});$('btnUpg').onclick=()=>{Snd.init();S.click();buildUpg();updateCredits();showScreen('upg');};$('coopCreate').onclick=()=>coopCreate(false);$('coopCreateVs').onclick=()=>coopCreate(true);$('cmCoop').onclick=()=>{if(!Net.host)return;Net.vs=false;S.click();updateCoopUI();netSend(true);};$('cmVs').onclick=()=>{if(!Net.host)return;Net.vs=true;S.click();updateCoopUI();netSend(true);};$('coopEnter').onclick=()=>coopEnter();$('coopGo').onclick=()=>{if(Net.on&&Net.host)startGame();};$('coopBack').onclick=()=>{netLeave();S.click();showScreen('lobby');};
 $('resLobby').onclick=()=>toLobby();
 $('pauseBtn').onclick=()=>pauseGame();
@@ -2754,7 +2756,16 @@ function drawGuards(inView,cones){
 // ---- developer menu ----
 const DEV_CODE='ECHO0811';
 function openSettings(){Snd.init();S.click();$('devPanel').hidden=!SAVE.devOn;showScreen('settings');renderDev();}
-function renderDev(){const d=SAVE.devOpt||{};$('dvGod').textContent='無敵：'+(d.god?'ON':'OFF');$('dvCamo').textContent='迷彩無限：'+(d.camo?'ON':'OFF');}
+function renderDev(){const d=SAVE.devOpt||{},o=v=>v?'ON':'OFF';$('dvGod').textContent='無敵：'+o(d.god);$('dvCamo').textContent='迷彩無限：'+o(d.camo);$('dvItems').textContent='アイテムMAX：'+o(d.items);$('dvUpg').textContent='強化MAX：'+o(SAVE.devUpg);$('dvCred').textContent='+10000 CREDIT：'+o(SAVE.devCred);$('dvAll').textContent='全解放：'+o(SAVE.devAll);$('dvDepReset').textContent=SAVE.escapesBak!=null?'深度を元に戻す（元：'+SAVE.escapesBak+'）':'深度：変更なし';}
+const devClone=v=>v===undefined?null:JSON.parse(JSON.stringify(v));
+const devSet={
+ items(on){SAVE.devOpt=SAVE.devOpt||{};SAVE.devOpt.items=!!on;},
+ upg(on){if(on&&!SAVE.devUpg){SAVE.upgBak=devClone(SAVE.upg);SAVE.upg={stam:3,speed:3,light:3,kit:3,hull:3};SAVE.devUpg=true;}else if(!on&&SAVE.devUpg){if(SAVE.upgBak==null)delete SAVE.upg;else SAVE.upg=SAVE.upgBak;SAVE.upgBak=null;SAVE.devUpg=false;}},
+ cred(on){if(on&&!SAVE.devCred){SAVE.credits+=10000;SAVE.devCred=true;}else if(!on&&SAVE.devCred){SAVE.credits=Math.max(0,SAVE.credits-10000);SAVE.devCred=false;}},
+ all(on){const K=['docs','badges','endings','roles'];if(on&&!SAVE.devAll){SAVE.allBak={};for(const k of K)SAVE.allBak[k]=(k in SAVE)?devClone(SAVE[k]):null;SAVE.docs=DOCS.map(d=>d.id);SAVE.badges=BADGES.map(b=>b[0]);SAVE.endings=['true','normal'];SAVE.roles=Object.keys(ROLE_PRICE);SAVE.devAll=true;}
+  else if(!on&&SAVE.devAll){const b=SAVE.allBak||{};for(const k of K){if(b[k]==null)delete SAVE[k];else SAVE[k]=b[k];}SAVE.allBak=null;SAVE.devAll=false;}},
+ dep(){if(SAVE.escapesBak!=null){SAVE.escapes=SAVE.escapesBak;SAVE.escapesBak=null;}}
+};
 function devApply(){G.dev=SAVE.devOn?(SAVE.devOpt||{}):null;if(G.dev&&G.dev.items&&G.bag){for(const k of ITEM_ORDER)G.bag[k]=99;}}
 function echoBreakout(){S.siren();G.blackout=1.5;G.flick=1;const [v,p]=spat(LY.brk[0]+0.5,LY.brk[1]+0.5,40);S.crash(Math.max(0.4,v),p);schedule(0.4,()=>S.screech());G.shake=12;grid[I(LY.brk[0],LY.brk[1])]=FLOOR;decals.push({t:'rubble',x:LY.brk[0],y:LY.brk[1]});redrawArea(LY.brk[0]-1,LY.brk[1]-1,LY.brk[0]+1,LY.brk[1]+1);buildMiniBase();E=newEcho(LY.eBrk[0],LY.eBrk[1]);E.idleT=2.5;E.lungeCD=12;
  schedule(3,()=>radio('……何かが隔壁を破った。ECHO-01だ。隊員、音を立てるな。'));schedule(11,()=>toast('ライトがちらついたら、ECHO-01が近い'));schedule(24,()=>toast('ロッカーに隠れればやり過ごせる。ただし、見られていたら……'));}
