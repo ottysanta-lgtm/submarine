@@ -319,6 +319,12 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
 #bWarp{position:fixed;right:calc(max(14px,env(safe-area-inset-right)) + 222px);bottom:calc(max(16px,env(safe-area-inset-bottom)) + var(--vb,0px) + 112px);width:54px;height:54px;font-size:12px;border-color:rgba(255,80,60,.8)}#bWarp small{font-size:9.5px;color:var(--dim);font-weight:700}#bWarp.dim{opacity:.55}
 
 #coopOpts .mapSel{margin:6px 0}#coopOpts .optRo{font-size:13px;color:var(--amber);margin:8px 0}
+
+#roles{overflow-y:auto;-webkit-overflow-scrolling:touch}
+#roles>*{flex-shrink:0}
+#roles .scroll{flex:0 0 auto;min-height:110px;max-height:40vh;overflow-y:auto}
+#roles .goRow{position:sticky;bottom:0;z-index:6;background:var(--bg);padding-bottom:max(8px,env(safe-area-inset-bottom));margin-top:6px;box-shadow:0 -12px 14px var(--bg)}
+@media (orientation:landscape){#roles .mapSel .rchip small{display:none}#roles .mapSel{margin:4px 0}#roles .mapSel .rchip{padding:6px 10px}#ctDesc{font-size:10.5px}#petBox .rchip img{height:20px!important}}
 </style>
 </head>
 <body>
@@ -366,7 +372,7 @@ body.app #fsBtn,body.app #fsLobby{display:none;}
  </div>
  <div id="opCard"><div class="opTop"><b id="opLv">Lv.1</b><span class="opName">OPERATOR</span><span id="streakChip"></span></div><div class="opBar"><i id="opBar"></i></div><div id="opXp" class="opXp"></div>
   <div class="opRule" id="dailyMod"></div><div class="opH">本日のミッション</div><div id="missions"></div></div>
- <div class="foot">ヘッドホン推奨　<span id="ver">ver 5.4（新フロア追加）</span></div>
+ <div class="foot">ヘッドホン推奨　<span id="ver">ver 5.5（新フロア追加）</span></div>
 </section>
 
 <section id="roles" class="screen" hidden>
